@@ -42,7 +42,7 @@ export const Route = createRootRoute({
       { title: "To Go" },
       { name: "description", content: "Sua lista pessoal de restaurantes para visitar." },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "To Go" },
       { name: "theme-color", content: "#f5f0e8" },
       { property: "og:title", content: "To Go" },
@@ -72,9 +72,46 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en" style={{ backgroundColor: "#f5f0e8" }}>
       <head>
         <HeadContent />
-        <style>{`html,body{background-color:#f5f0e8;margin:0;}`}</style>
+        <style>{`
+          html, body { background-color: #f5f0e8 !important; margin: 0; }
+          #togo-splash {
+            position: fixed; inset: 0; background: #f5f0e8;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 99999; transition: opacity 0.4s ease;
+          }
+          #togo-splash.hidden { opacity: 0; pointer-events: none; }
+          #togo-splash span {
+            margin-top: 16px; font-size: 28px; color: #1a1a18;
+            font-family: Georgia, serif; font-weight: 400;
+            letter-spacing: -0.02em;
+          }
+        `}</style>
       </head>
       <body style={{ backgroundColor: "#f5f0e8" }}>
+        <div id="togo-splash">
+          <svg width="72" height="72" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="512" height="512" fill="#f5f0e8" rx="115"/>
+            <path d="M256 28 C152 28 72 108 72 208 C72 340 256 484 256 484 C256 484 440 340 440 208 C440 108 360 28 256 28Z" fill="rgba(196,132,74,0.12)" stroke="#c4844a" strokeWidth="16" strokeLinejoin="round"/>
+            <circle cx="256" cy="204" r="86" fill="rgba(196,132,74,0.08)" stroke="#c4844a" strokeWidth="12"/>
+            <line x1="230" y1="148" x2="230" y2="202" stroke="#1a1a18" strokeWidth="12" strokeLinecap="round"/>
+            <line x1="210" y1="148" x2="210" y2="176" stroke="#1a1a18" strokeWidth="11" strokeLinecap="round"/>
+            <line x1="250" y1="148" x2="250" y2="176" stroke="#1a1a18" strokeWidth="11" strokeLinecap="round"/>
+            <path d="M210 176 Q210 202 230 202 Q250 202 250 176" stroke="#1a1a18" strokeWidth="11" fill="none" strokeLinecap="round"/>
+            <line x1="230" y1="202" x2="230" y2="248" stroke="#1a1a18" strokeWidth="12" strokeLinecap="round"/>
+            <path d="M282 148 L282 204 Q282 228 264 228 L264 248" stroke="#c4844a" strokeWidth="12" fill="none" strokeLinecap="round"/>
+            <path d="M282 148 Q310 162 310 186 Q310 210 282 220" stroke="#c4844a" strokeWidth="12" fill="none" strokeLinecap="round"/>
+          </svg>
+          <span>To Go</span>
+        </div>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('load', function() {
+            setTimeout(function() {
+              var s = document.getElementById('togo-splash');
+              if (s) { s.classList.add('hidden'); setTimeout(function(){ s.remove(); }, 500); }
+            }, 300);
+          });
+        `}} />
         {children}
         <Scripts />
       </body>
