@@ -6,6 +6,10 @@
 html, body, #root, #app {
   background-color: #f5f0e8 !important;
 }
+/* Force cream even in dark mode */
+@media (prefers-color-scheme: dark) {
+  html, body { background-color: #f5f0e8 !important; }
+}
 
 /* Also set via meta theme-color handled in root */
 
@@ -116,7 +120,7 @@ html, body, #root, #app {
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
+  --background: oklch(0.97 0.012 60); /* Keep cream in dark mode too */
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);
   --card-foreground: oklch(0.984 0.003 247.858);
