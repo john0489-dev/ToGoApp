@@ -3,7 +3,6 @@ import { useState, useMemo, useCallback, useEffect, useRef, useDeferredValue } f
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Wand2, Trash2, Shield, Sparkles } from "lucide-react";
 import { lazy, Suspense } from "react";
-import { NearMeView } from "@/components/NearMeView";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
 import { InviteDialog } from "@/components/InviteDialog";
@@ -16,12 +15,14 @@ import { ProLockBadge } from "@/components/ProLockBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdvancedFiltersSheet, EMPTY_ADVANCED_FILTERS, countActiveFilters, type AdvancedFilters } from "@/components/AdvancedFiltersSheet";
 import { SlidersHorizontal, FileDown } from "lucide-react";
-import { ExportPdfDialog, type ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
-import { ChefAIWidget } from "@/components/ChefAIWidget";
-import { exportRestaurantsToPdf, type ExportSection, type ExportRestaurant } from "@/lib/exportPdf";
+import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
+import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
 import { toast } from "sonner";
 
 const LazyMapView = lazy(() => import("@/components/MapView").then(m => ({ default: m.MapView })));
+const LazyNearMeView = lazy(() => import("@/components/NearMeView").then(m => ({ default: m.NearMeView })));
+const LazyExportPdfDialog = lazy(() => import("@/components/ExportPdfDialog").then(m => ({ default: m.ExportPdfDialog })));
+const LazyChefAIWidget = lazy(() => import("@/components/ChefAIWidget").then(m => ({ default: m.ChefAIWidget })));
 
 const PAGE_SIZE = 20;
 import {
