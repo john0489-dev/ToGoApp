@@ -455,6 +455,7 @@ function Index() {
           ? "todas-as-listas"
           : activeList?.name ?? "minha-lista";
 
+      const { exportRestaurantsToPdf } = await import("@/lib/exportPdf");
       exportRestaurantsToPdf({
         sections,
         includeNotes: opts.includeNotes,
@@ -1073,7 +1074,9 @@ function Index() {
         {/* Near-me tab — mounted on first visit, kept alive after */}
         {mountedTabs.nearme && (
           <div className={tab === "nearme" ? "px-4 py-3 pb-20" : "hidden"}>
-            <NearMeView restaurants={restaurants} onToggleVisited={handleToggleVisited} />
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-sm text-muted-foreground">Carregando...</div>}>
+              <LazyNearMeView restaurants={restaurants} onToggleVisited={handleToggleVisited} />
+            </Suspense>
           </div>
         )}
       </div>
@@ -1136,24 +1139,30 @@ function Index() {
         availableTags={availableTags}
         availableNeighborhoods={availableNeighborhoods}
       />
-      <ExportPdfDialog
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        onConfirm={handleExportPdf}
-        allowAllLists={lists.length > 1}
-        currentListName={lists.find((l) => l.id === activeListId)?.name ?? "Minha Lista"}
-      />
-      <ChefAIWidget
-        restaurants={restaurants.map((r) => ({
-          name: r.name,
-          cuisine: r.cuisine,
-          location: r.location,
-          rating: r.rating,
-          visited: r.visited,
-          occasion: r.occasion,
-          tags: r.tags,
-        }))}
-      />
+      {exportOpen && (
+        <Suspense fallback={null}>
+          <LazyExportPdfDialog
+            open={exportOpen}
+            onClose={() => setExportOpen(false)}
+            onConfirm={handleExportPdf}
+            allowAllLists={lists.length > 1}
+            currentListName={lists.find((l) => l.id === activeListId)?.name ?? "Minha Lista"}
+          />
+        </Suspense>
+      )}
+      <Suspense fallback={null}>
+        <LazyChefAIWidget
+          restaurants={restaurants.map((r) => ({
+            name: r.name,
+            cuisine: r.cuisine,
+            location: r.location,
+            rating: r.rating,
+            visited: r.visited,
+            occasion: r.occasion,
+            tags: r.tags,
+          }))}
+        />
+      </Suspense>
     </div>
   );
 }
