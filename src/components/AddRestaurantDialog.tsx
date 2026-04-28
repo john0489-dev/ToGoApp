@@ -82,8 +82,41 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const [showDropdown, setShowDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<{ address: string; lat: number; lon: number } | null>(null);
+  const [cuisineLoading, setCuisineLoading] = useState(false);
+  const [cuisineSuggested, setCuisineSuggested] = useState(false);
+  const [cuisineManual, setCuisineManual] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
+  const cuisineReqIdRef = useRef(0);
+
+  const fetchCuisineSuggestion = async (n: string, addr: string) => {
+    if (cuisineManual) return;
+    if (!n || n.trim().length < 3) return;
+    const myReq = ++cuisineReqIdRef.current;
+    setCuisineLoading(true);
+    try {
+      const res = await fetch("/api/suggest-cuisine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: n.trim(), address: addr.trim() }),
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { cuisine?: string };
+      if (myReq !== cuisineReqIdRef.current) return;
+      if (cuisineManual) return;
+      const suggested = (data.cuisine || "").trim();
+      if (!suggested) return;
+      const match = CUISINE_OPTIONS.find(
+        (c) => c.toLowerCase() === suggested.toLowerCase()
+      );
+      setCuisine(match || "Outro");
+      setCuisineSuggested(true);
+    } catch (err) {
+      console.error("suggest cuisine failed", err);
+    } finally {
+      if (myReq === cuisineReqIdRef.current) setCuisineLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
