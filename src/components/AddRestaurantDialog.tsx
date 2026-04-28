@@ -185,6 +185,8 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setResults([]);
     setShowDropdown(false);
     setHasSearched(false);
+    setCuisineSuggested(false);
+    setCuisineManual(false);
     onClose();
   };
 
