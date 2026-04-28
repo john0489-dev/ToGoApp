@@ -222,6 +222,12 @@ export const addRestaurant = createServerFn({ method: "POST" })
           `Limite do plano Free atingido (${FREE_RESTAURANT_LIMIT} restaurantes). Faça upgrade para Pro para adicionar mais.`
         );
       }
+      // Unique constraint: restaurant with same name already exists in this list
+      if (error.code === "23505") {
+        throw new Error(
+          `Já existe um restaurante com este nome nesta lista. Use um nome diferente ou edite o existente.`
+        );
+      }
       safeError("addRestaurant", error);
     }
     return { restaurant };
