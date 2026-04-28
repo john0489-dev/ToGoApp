@@ -301,10 +301,27 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-card-foreground mb-1">Culinária</label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="block text-sm font-medium text-card-foreground">Culinária</label>
+              {cuisineLoading && (
+                <Loader2 size={12} className="animate-spin text-muted-foreground" />
+              )}
+              {!cuisineLoading && cuisineSuggested && !cuisineManual && (
+                <span
+                  className="inline-flex items-center gap-1"
+                  style={{ fontSize: "11px", color: "#c4844a" }}
+                >
+                  <Sparkles size={11} /> sugerido pela IA
+                </span>
+              )}
+            </div>
             <select
               value={cuisine}
-              onChange={(e) => setCuisine(e.target.value)}
+              onChange={(e) => {
+                setCuisine(e.target.value);
+                setCuisineManual(true);
+                setCuisineSuggested(false);
+              }}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {CUISINE_OPTIONS.map((c) => (
