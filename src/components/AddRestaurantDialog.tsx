@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { X, MapPin, Loader2, Check } from "lucide-react";
-import { searchRestaurantAddress } from "@/lib/api.functions";
+import { X, Loader2 } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 
-interface AddressSuggestion {
-  display_name: string;
-  latitude: number;
-  longitude: number;
+interface PlaceResult {
+  name: string;
+  address: string;
+  lat: string;
+  lon: string;
+  neighbourhood: string;
 }
 
 interface AddRestaurantDialogProps {
@@ -32,59 +33,103 @@ const CUISINE_OPTIONS = [
   "Vegetariano", "Vietnamita", "Outro"
 ];
 
-export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestaurantDialogProps) {
+async function searchPlaces(query: string): Promise<PlaceResult[]> {
+  if (query.length < 3) return [];
+  const url =
+    "https://nominatim.openstreetmap.org/search?" +
+    new URLSearchParams({
+      q: query,
+      format: "json",
+      addressdetails: "1",
+      limit: "5",
+      countrycodes: "br",
+      "accept-language": "pt-BR",
+    });
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map((item: any) => ({
+    name: item.name || String(item.display_name).split(",")[0],
+    address: item.display_name,
+    lat: item.lat,
+    lon: item.lon,
+    neighbourhood:
+      item.address?.suburb ||
+      item.address?.neighbourhood ||
+      item.address?.city_district ||
+      item.address?.city ||
+      item.address?.town ||
+      "",
+  }));
+}
+
+function shortAddress(p: PlaceResult): string {
+  const parts = p.address.split(",").map((s) => s.trim());
+  // Try neighbourhood + city
+  if (p.neighbourhood) {
+    const city = parts.find((x) => x && x !== p.neighbourhood && x !== p.name);
+    return city ? `${p.neighbourhood}, ${city}` : p.neighbourhood;
+  }
+  return parts.slice(1, 3).join(", ");
+}
+
+export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialogProps) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [cuisine, setCuisine] = useState("Bar");
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [results, setResults] = useState<PlaceResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<AddressSuggestion | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<{ address: string; lat: number; lon: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
 
-  // Debounced address search by name (+ location bias)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (name.trim().length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
+    const q = name.trim();
+    if (q.length < 3) {
+      setResults([]);
+      setShowDropdown(false);
+      setHasSearched(false);
       return;
     }
-    if (selected && selected.display_name) return; // user already picked
     debounceRef.current = setTimeout(async () => {
       const myReq = ++reqIdRef.current;
       setSearching(true);
       try {
-        const { suggestions: results } = await searchRestaurantAddress({
-          data: { name: name.trim(), location: location.trim() || undefined },
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
+        const res = await searchPlaces(q);
         if (myReq !== reqIdRef.current) return;
-        setSuggestions(results);
-        setShowSuggestions(results.length > 0);
+        setResults(res);
+        setHasSearched(true);
+        setShowDropdown(true);
       } catch (err) {
-        console.error("address search failed", err);
+        console.error("nominatim search failed", err);
       } finally {
         if (myReq === reqIdRef.current) setSearching(false);
       }
-    }, 600);
+    }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [name, location, selected, session.access_token]);
+  }, [name]);
 
   if (!open) return null;
 
-  const handlePickSuggestion = (s: AddressSuggestion) => {
-    setSelected(s);
-    setLocation(s.display_name);
-    setShowSuggestions(false);
+  const handlePick = (p: PlaceResult) => {
+    setName(p.name);
+    const short = shortAddress(p);
+    setLocation(short || p.address);
+    setSelectedAddress({ address: p.address, lat: parseFloat(p.lat), lon: parseFloat(p.lon) });
+    setShowDropdown(false);
   };
 
-  const handleClearSuggestion = () => {
-    setSelected(null);
-    setShowSuggestions(suggestions.length > 0);
+  const handleClearName = () => {
+    setName("");
+    setResults([]);
+    setShowDropdown(false);
+    setHasSearched(false);
+    setSelectedAddress(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,16 +139,17 @@ export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestau
       name: name.trim(),
       location: location.trim(),
       cuisine,
-      address: selected?.display_name,
-      latitude: selected?.latitude,
-      longitude: selected?.longitude,
+      address: selectedAddress?.address,
+      latitude: selectedAddress?.lat,
+      longitude: selectedAddress?.lon,
     });
     setName("");
     setLocation("");
     setCuisine("Bar");
-    setSelected(null);
-    setSuggestions([]);
-    setShowSuggestions(false);
+    setSelectedAddress(null);
+    setResults([]);
+    setShowDropdown(false);
+    setHasSearched(false);
     onClose();
   };
 
@@ -120,7 +166,7 @@ export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestau
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-card-foreground mb-1">
-              Nome
+              Nome ou endereço do restaurante
             </label>
             <div className="relative">
               <input
@@ -128,33 +174,62 @@ export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestau
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
-                  if (selected) setSelected(null);
+                  if (selectedAddress) setSelectedAddress(null);
                 }}
-                placeholder="Nome do restaurante"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
+                placeholder="Ex: Spot Burger, Pinheiros"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-16 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 required
+                autoComplete="off"
               />
               {searching && (
-                <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
+                <Loader2 size={16} className="absolute right-9 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+              {name && (
+                <button
+                  type="button"
+                  onClick={handleClearName}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                  aria-label="Limpar"
+                >
+                  <X size={14} />
+                </button>
               )}
             </div>
 
-            {/* Suggestions dropdown */}
-            {showSuggestions && suggestions.length > 0 && !selected && (
-              <div className="mt-1 rounded-lg border border-border bg-popover shadow-md overflow-hidden">
-                <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/50">
-                  {suggestions.length === 1 ? "Endereço encontrado" : "Selecione o endereço correto"}
-                </p>
-                <ul className="max-h-48 overflow-y-auto">
-                  {suggestions.map((s, i) => (
-                    <li key={i}>
+            {/* Dropdown */}
+            {showDropdown && results.length > 0 && (
+              <div
+                className="mt-1 overflow-hidden"
+                style={{
+                  background: "#fff",
+                  border: "1px solid #ede9e3",
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                }}
+              >
+                <ul>
+                  {results.map((r, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        borderBottom: i < results.length - 1 ? "1px solid #f5f2ee" : "none",
+                      }}
+                    >
                       <button
                         type="button"
-                        onClick={() => handlePickSuggestion(s)}
-                        className="flex w-full items-start gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent transition-colors"
+                        onClick={() => handlePick(r)}
+                        className="w-full text-left transition-colors"
+                        style={{ padding: "12px 16px", background: "transparent" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#faf9f7")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
-                        <MapPin size={14} className="mt-0.5 shrink-0 text-primary" />
-                        <span className="flex-1">{s.display_name}</span>
+                        <div style={{ fontSize: "14px", fontWeight: 500, color: "#1a1a18" }}>
+                          {r.name}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#aaa", marginTop: 2 }}>
+                          {shortAddress(r) || r.address}
+                        </div>
                       </button>
                     </li>
                   ))}
@@ -162,10 +237,10 @@ export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestau
               </div>
             )}
 
-            {/* No results message */}
-            {!searching && name.trim().length >= 3 && !selected && suggestions.length === 0 && showSuggestions === false && (
+            {/* No results */}
+            {showDropdown && hasSearched && !searching && results.length === 0 && (
               <p className="mt-1 text-[11px] text-muted-foreground">
-                Nenhum endereço encontrado — preencha manualmente abaixo.
+                Nenhum resultado. Digite o endereço manualmente.
               </p>
             )}
           </div>
@@ -174,27 +249,13 @@ export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestau
             <label className="block text-sm font-medium text-card-foreground mb-1">
               Localização / Endereço
             </label>
-            {selected ? (
-              <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 flex items-start gap-2">
-                <Check size={14} className="mt-0.5 shrink-0 text-primary" />
-                <span className="flex-1 text-xs text-foreground">{selected.display_name}</span>
-                <button
-                  type="button"
-                  onClick={handleClearSuggestion}
-                  className="text-[11px] font-medium text-primary hover:underline shrink-0"
-                >
-                  Editar
-                </button>
-              </div>
-            ) : (
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Cidade, bairro ou endereço"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            )}
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Bairro, cidade ou endereço"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
 
           <div>
@@ -212,7 +273,12 @@ export function AddRestaurantDialog({ open, onClose, session, onAdd }: AddRestau
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="w-full text-sm font-medium text-white transition-opacity hover:opacity-90"
+            style={{
+              background: "linear-gradient(135deg, #d4a855 0%, #c4944a 100%)",
+              height: "52px",
+              borderRadius: "14px",
+            }}
           >
             Adicionar
           </button>
