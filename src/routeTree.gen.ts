@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
 import { Route as PaymentCanceledRouteImport } from './routes/payment.canceled'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as ApiSuggestCuisineRouteImport } from './routes/api/suggest-cuisine'
 import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
 
 const TermsRoute = TermsRouteImport.update({
@@ -77,6 +78,11 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
   path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSuggestCuisineRoute = ApiSuggestCuisineRouteImport.update({
+  id: '/api/suggest-cuisine',
+  path: '/api/suggest-cuisine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChefAiRoute = ApiChefAiRouteImport.update({
   id: '/api/chef-ai',
   path: '/api/chef-ai',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/api/chef-ai': typeof ApiChefAiRoute
+  '/api/suggest-cuisine': typeof ApiSuggestCuisineRoute
   '/invite/$code': typeof InviteCodeRoute
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/api/chef-ai': typeof ApiChefAiRoute
+  '/api/suggest-cuisine': typeof ApiSuggestCuisineRoute
   '/invite/$code': typeof InviteCodeRoute
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/api/chef-ai': typeof ApiChefAiRoute
+  '/api/suggest-cuisine': typeof ApiSuggestCuisineRoute
   '/invite/$code': typeof InviteCodeRoute
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/api/chef-ai'
+    | '/api/suggest-cuisine'
     | '/invite/$code'
     | '/payment/canceled'
     | '/payment/success'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/api/chef-ai'
+    | '/api/suggest-cuisine'
     | '/invite/$code'
     | '/payment/canceled'
     | '/payment/success'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/api/chef-ai'
+    | '/api/suggest-cuisine'
     | '/invite/$code'
     | '/payment/canceled'
     | '/payment/success'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   RefundRoute: typeof RefundRoute
   TermsRoute: typeof TermsRoute
   ApiChefAiRoute: typeof ApiChefAiRoute
+  ApiSuggestCuisineRoute: typeof ApiSuggestCuisineRoute
   InviteCodeRoute: typeof InviteCodeRoute
   PaymentCanceledRoute: typeof PaymentCanceledRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/suggest-cuisine': {
+      id: '/api/suggest-cuisine'
+      path: '/api/suggest-cuisine'
+      fullPath: '/api/suggest-cuisine'
+      preLoaderRoute: typeof ApiSuggestCuisineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chef-ai': {
       id: '/api/chef-ai'
       path: '/api/chef-ai'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundRoute: RefundRoute,
   TermsRoute: TermsRoute,
   ApiChefAiRoute: ApiChefAiRoute,
+  ApiSuggestCuisineRoute: ApiSuggestCuisineRoute,
   InviteCodeRoute: InviteCodeRoute,
   PaymentCanceledRoute: PaymentCanceledRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Sparkles } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 
 interface PlaceResult {
@@ -82,8 +82,41 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const [showDropdown, setShowDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<{ address: string; lat: number; lon: number } | null>(null);
+  const [cuisineLoading, setCuisineLoading] = useState(false);
+  const [cuisineSuggested, setCuisineSuggested] = useState(false);
+  const [cuisineManual, setCuisineManual] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
+  const cuisineReqIdRef = useRef(0);
+
+  const fetchCuisineSuggestion = async (n: string, addr: string) => {
+    if (cuisineManual) return;
+    if (!n || n.trim().length < 3) return;
+    const myReq = ++cuisineReqIdRef.current;
+    setCuisineLoading(true);
+    try {
+      const res = await fetch("/api/suggest-cuisine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: n.trim(), address: addr.trim() }),
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { cuisine?: string };
+      if (myReq !== cuisineReqIdRef.current) return;
+      if (cuisineManual) return;
+      const suggested = (data.cuisine || "").trim();
+      if (!suggested) return;
+      const match = CUISINE_OPTIONS.find(
+        (c) => c.toLowerCase() === suggested.toLowerCase()
+      );
+      setCuisine(match || "Outro");
+      setCuisineSuggested(true);
+    } catch (err) {
+      console.error("suggest cuisine failed", err);
+    } finally {
+      if (myReq === cuisineReqIdRef.current) setCuisineLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -122,6 +155,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setLocation(short || p.address);
     setSelectedAddress({ address: p.address, lat: parseFloat(p.lat), lon: parseFloat(p.lon) });
     setShowDropdown(false);
+    void fetchCuisineSuggestion(p.name, short || p.address);
   };
 
   const handleClearName = () => {
@@ -130,6 +164,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setShowDropdown(false);
     setHasSearched(false);
     setSelectedAddress(null);
+    setCuisineSuggested(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -150,6 +185,8 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setResults([]);
     setShowDropdown(false);
     setHasSearched(false);
+    setCuisineSuggested(false);
+    setCuisineManual(false);
     onClose();
   };
 
@@ -175,6 +212,11 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                 onChange={(e) => {
                   setName(e.target.value);
                   if (selectedAddress) setSelectedAddress(null);
+                }}
+                onBlur={() => {
+                  if (name.trim().length >= 3 && !cuisineManual) {
+                    void fetchCuisineSuggestion(name, location || selectedAddress?.address || "");
+                  }
                 }}
                 onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
                 placeholder="Ex: Spot Burger, Pinheiros"
@@ -259,10 +301,27 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-card-foreground mb-1">Culinária</label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="block text-sm font-medium text-card-foreground">Culinária</label>
+              {cuisineLoading && (
+                <Loader2 size={12} className="animate-spin text-muted-foreground" />
+              )}
+              {!cuisineLoading && cuisineSuggested && !cuisineManual && (
+                <span
+                  className="inline-flex items-center gap-1"
+                  style={{ fontSize: "11px", color: "#c4844a" }}
+                >
+                  <Sparkles size={11} /> sugerido pela IA
+                </span>
+              )}
+            </div>
             <select
               value={cuisine}
-              onChange={(e) => setCuisine(e.target.value)}
+              onChange={(e) => {
+                setCuisine(e.target.value);
+                setCuisineManual(true);
+                setCuisineSuggested(false);
+              }}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {CUISINE_OPTIONS.map((c) => (
