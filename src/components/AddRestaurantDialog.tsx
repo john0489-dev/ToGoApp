@@ -155,6 +155,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setLocation(short || p.address);
     setSelectedAddress({ address: p.address, lat: parseFloat(p.lat), lon: parseFloat(p.lon) });
     setShowDropdown(false);
+    void fetchCuisineSuggestion(p.name, short || p.address);
   };
 
   const handleClearName = () => {
@@ -163,6 +164,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setShowDropdown(false);
     setHasSearched(false);
     setSelectedAddress(null);
+    setCuisineSuggested(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
