@@ -213,6 +213,11 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                   setName(e.target.value);
                   if (selectedAddress) setSelectedAddress(null);
                 }}
+                onBlur={() => {
+                  if (name.trim().length >= 3 && !cuisineManual) {
+                    void fetchCuisineSuggestion(name, location || selectedAddress?.address || "");
+                  }
+                }}
                 onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
                 placeholder="Ex: Spot Burger, Pinheiros"
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-16 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
