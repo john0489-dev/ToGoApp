@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Sparkles } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 
 interface PlaceResult {
