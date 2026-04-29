@@ -224,7 +224,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div ref={searchWrapperRef}>
+          <div ref={searchWrapperRef} style={{ position: "relative" }}>
             <label className="block text-sm font-medium text-card-foreground mb-1">
               Buscar restaurante
             </label>
@@ -276,12 +276,19 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
             {/* Dropdown */}
             {showDropdown && results.length > 0 && (
               <div
-                className="mt-1 overflow-hidden"
+                className="overflow-y-auto"
                 style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                  marginTop: 4,
+                  maxHeight: 240,
                   background: "#fff",
                   border: "1px solid #ede9e3",
                   borderRadius: "12px",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                 }}
               >
                 <ul>
@@ -322,12 +329,18 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
             {/* No results */}
             {showDropdown && hasSearched && !searching && results.length === 0 && (
               <div
-                className="mt-1 text-center"
+                className="text-center"
                 style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                  marginTop: 4,
                   background: "#fff",
                   border: "1px solid #ede9e3",
                   borderRadius: "12px",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                   padding: "16px",
                   fontSize: "13px",
                   color: "#999",
