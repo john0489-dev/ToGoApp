@@ -665,8 +665,13 @@ function Index() {
 
   const activeList = lists.find((l) => l.id === activeListId);
 
+  const isMapTab = tab === "location";
+
   return (
-    <div className="min-h-[100dvh] flex flex-col" style={{ background: "#faf9f7" }}>
+    <div
+      className={isMapTab ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-[100dvh] flex flex-col"}
+      style={{ background: "#faf9f7" }}
+    >
       {/* Header */}
       <header
         className="shrink-0"
@@ -907,7 +912,7 @@ function Index() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto mx-auto max-w-lg w-full relative">
+      <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
         {/* List tab — always mounted */}
         <div className={tab === "list" ? "px-4 py-3 space-y-3" : "hidden"}>
             <div className="relative">
@@ -1068,7 +1073,10 @@ function Index() {
 
         {/* Map tab — full-bleed, fills space between header and bottom nav */}
         {mountedTabs.location && (
-          <div className={tab === "location" ? "absolute inset-0 pb-[calc(56px+env(safe-area-inset-bottom))]" : "hidden"}>
+          <div
+            className={tab === "location" ? "absolute inset-0 overflow-hidden" : "hidden"}
+            style={tab === "location" ? { bottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
+          >
             <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Carregando mapa...</div>}>
               <LazyMapView restaurants={restaurants} />
             </Suspense>
