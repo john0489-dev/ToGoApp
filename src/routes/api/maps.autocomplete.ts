@@ -9,6 +9,40 @@ interface PlacePrediction {
   placeId: string;
 }
 
+async function callGoogle(apiKey: string, query: string): Promise<Response> {
+  return fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": [
+        "places.id",
+        "places.displayName",
+        "places.formattedAddress",
+        "places.shortFormattedAddress",
+        "places.location",
+        "places.addressComponents",
+      ].join(","),
+      // Some Google edges echo the Referer back into restriction checks even
+      // for keys with no app restriction; sending an explicit referer avoids
+      // the rare API_KEY_HTTP_REFERRER_BLOCKED edge cases.
+      Referer: "https://togo.lovable.app",
+    },
+    body: JSON.stringify({
+      textQuery: query,
+      languageCode: "pt-BR",
+      regionCode: "BR",
+      maxResultCount: 5,
+      locationBias: {
+        rectangle: {
+          low: { latitude: -33.75, longitude: -73.99 },
+          high: { latitude: 5.27, longitude: -34.79 },
+        },
+      },
+    }),
+  });
+}
+
 export const Route = createFileRoute("/api/maps/autocomplete")({
   server: {
     handlers: {
@@ -34,44 +68,22 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
             return Response.json({ error: "query muito longa" }, { status: 400 });
           }
 
-          // Use Places API (New) - searchText returns rich place data in one call.
-          const res = await fetch(
-            "https://places.googleapis.com/v1/places:searchText",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": apiKey,
-                "X-Goog-FieldMask": [
-                  "places.id",
-                  "places.displayName",
-                  "places.formattedAddress",
-                  "places.shortFormattedAddress",
-                  "places.location",
-                  "places.addressComponents",
-                ].join(","),
-              },
-              body: JSON.stringify({
-                textQuery: query,
-                languageCode: "pt-BR",
-                regionCode: "BR",
-                maxResultCount: 5,
-                // Bias results toward Brazil (rectangle covering all BR territory)
-                locationBias: {
-                  rectangle: {
-                    low: { latitude: -33.75, longitude: -73.99 },
-                    high: { latitude: 5.27, longitude: -34.79 },
-                  },
-                },
-              }),
-            }
-          );
+          // Try once; on transient failure (5xx / 403 propagation), retry once.
+          let res = await callGoogle(apiKey, query);
+          if (!res.ok && (res.status === 403 || res.status >= 500)) {
+            await new Promise((r) => setTimeout(r, 250));
+            res = await callGoogle(apiKey, query);
+          }
 
           if (!res.ok) {
             const text = await res.text().catch(() => "");
-            console.error("[maps/autocomplete] Google API error", res.status, text);
+            console.error(
+              "[maps/autocomplete] Google API error",
+              res.status,
+              text.slice(0, 500)
+            );
             return Response.json(
-              { error: "Falha na busca de lugares", _s: res.status, _d: text.slice(0, 800) },
+              { error: "Falha na busca de lugares" },
               { status: 502 }
             );
           }
@@ -94,7 +106,8 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
           const results: PlacePrediction[] = (data.places ?? []).map((p) => {
             const comps = p.addressComponents ?? [];
             const findComp = (...types: string[]) =>
-              comps.find((c) => c.types?.some((t) => types.includes(t)))?.longText ?? "";
+              comps.find((c) => c.types?.some((t) => types.includes(t)))
+                ?.longText ?? "";
             const neighbourhood =
               findComp("sublocality", "sublocality_level_1", "neighborhood") ||
               findComp("administrative_area_level_2") ||
@@ -112,11 +125,7 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
 
           return Response.json(
             { results },
-            {
-              headers: {
-                "Cache-Control": "private, max-age=60",
-              },
-            }
+            { headers: { "Cache-Control": "private, max-age=60" } }
           );
         } catch (err) {
           console.error("[maps/autocomplete] unexpected error", err);
