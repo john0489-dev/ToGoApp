@@ -205,7 +205,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-card-foreground mb-1">
-              Nome ou endereço do restaurante
+              Buscar restaurante
             </label>
             <div className="relative">
               <input
