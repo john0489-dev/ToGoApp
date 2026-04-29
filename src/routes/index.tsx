@@ -908,7 +908,8 @@ function Index() {
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{toVisitCount}</p>
             </div>
           </div>
-        </div>
+          </div>
+          )}
       </header>
 
       {/* Content */}
