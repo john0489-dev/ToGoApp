@@ -92,6 +92,19 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
   const cuisineReqIdRef = useRef(0);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    if (!showDropdown) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [showDropdown]);
 
   const fetchCuisineSuggestion = async (n: string, addr: string) => {
     if (cuisineManual) return;
