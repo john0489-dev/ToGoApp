@@ -321,7 +321,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
   }
 
   return (
-    <div className="relative w-full" style={{ height: "calc(100vh - 280px)", minHeight: "400px" }}>
+    <div className="relative w-full h-full">
       <div ref={containerRef} className="h-full w-full rounded-lg overflow-hidden bg-muted" />
 
       {!ready && (
