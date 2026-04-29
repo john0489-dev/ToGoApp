@@ -149,7 +149,13 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setName(p.name);
     const short = shortAddress(p);
     setLocation(short || p.address);
-    setSelectedAddress({ address: p.address, lat: parseFloat(p.lat), lon: parseFloat(p.lon) });
+    const lat = p.lat ? parseFloat(p.lat) : NaN;
+    const lon = p.lon ? parseFloat(p.lon) : NaN;
+    setSelectedAddress({
+      address: p.address,
+      lat: Number.isFinite(lat) ? lat : 0,
+      lon: Number.isFinite(lon) ? lon : 0,
+    });
     setShowDropdown(false);
     void fetchCuisineSuggestion(p.name, short || p.address);
   };
