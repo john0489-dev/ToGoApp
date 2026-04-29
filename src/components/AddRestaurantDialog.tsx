@@ -60,8 +60,16 @@ async function searchPlaces(query: string): Promise<PlaceResult[]> {
 }
 
 function shortAddress(p: PlaceResult): string {
-  const parts = p.address.split(",").map((s) => s.trim());
-  // Try neighbourhood + city
+  const cleanPart = (s: string) =>
+    s
+      .replace(/\b\d{5}-?\d{3}\b/g, "") // CEP
+      .replace(/\bBrasil\b/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  const parts = p.address
+    .split(",")
+    .map((s) => cleanPart(s))
+    .filter(Boolean);
   if (p.neighbourhood) {
     const city = parts.find((x) => x && x !== p.neighbourhood && x !== p.name);
     return city ? `${p.neighbourhood}, ${city}` : p.neighbourhood;
