@@ -35,31 +35,27 @@ const CUISINE_OPTIONS = [
 
 async function searchPlaces(query: string): Promise<PlaceResult[]> {
   if (query.length < 3) return [];
-  const url =
-    "https://nominatim.openstreetmap.org/search?" +
-    new URLSearchParams({
-      q: query,
-      format: "json",
-      addressdetails: "1",
-      limit: "5",
-      countrycodes: "br",
-      "accept-language": "pt-BR",
-    });
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetch("/api/maps/autocomplete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
   if (!res.ok) return [];
-  const data = await res.json();
-  return data.map((item: any) => ({
-    name: item.name || String(item.display_name).split(",")[0],
-    address: item.display_name,
-    lat: item.lat,
-    lon: item.lon,
-    neighbourhood:
-      item.address?.suburb ||
-      item.address?.neighbourhood ||
-      item.address?.city_district ||
-      item.address?.city ||
-      item.address?.town ||
-      "",
+  const data = (await res.json()) as {
+    results?: Array<{
+      name: string;
+      address: string;
+      lat: number | null;
+      lon: number | null;
+      neighbourhood: string;
+    }>;
+  };
+  return (data.results ?? []).map((r) => ({
+    name: r.name,
+    address: r.address,
+    lat: r.lat != null ? String(r.lat) : "",
+    lon: r.lon != null ? String(r.lon) : "",
+    neighbourhood: r.neighbourhood,
   }));
 }
 
@@ -153,7 +149,13 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     setName(p.name);
     const short = shortAddress(p);
     setLocation(short || p.address);
-    setSelectedAddress({ address: p.address, lat: parseFloat(p.lat), lon: parseFloat(p.lon) });
+    const lat = p.lat ? parseFloat(p.lat) : NaN;
+    const lon = p.lon ? parseFloat(p.lon) : NaN;
+    setSelectedAddress({
+      address: p.address,
+      lat: Number.isFinite(lat) ? lat : 0,
+      lon: Number.isFinite(lon) ? lon : 0,
+    });
     setShowDropdown(false);
     void fetchCuisineSuggestion(p.name, short || p.address);
   };
