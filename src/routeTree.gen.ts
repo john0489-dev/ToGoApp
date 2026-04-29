@@ -22,6 +22,8 @@ import { Route as PaymentCanceledRouteImport } from './routes/payment.canceled'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ApiSuggestCuisineRouteImport } from './routes/api/suggest-cuisine'
 import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
+import { Route as ApiMapsGeocodeRouteImport } from './routes/api/maps.geocode'
+import { Route as ApiMapsConfigRouteImport } from './routes/api/maps.config'
 import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autocomplete'
 
 const TermsRoute = TermsRouteImport.update({
@@ -89,6 +91,16 @@ const ApiChefAiRoute = ApiChefAiRouteImport.update({
   path: '/api/chef-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMapsGeocodeRoute = ApiMapsGeocodeRouteImport.update({
+  id: '/api/maps/geocode',
+  path: '/api/maps/geocode',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMapsConfigRoute = ApiMapsConfigRouteImport.update({
+  id: '/api/maps/config',
+  path: '/api/maps/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMapsAutocompleteRoute = ApiMapsAutocompleteRouteImport.update({
   id: '/api/maps/autocomplete',
   path: '/api/maps/autocomplete',
@@ -110,6 +122,8 @@ export interface FileRoutesByFullPath {
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
+  '/api/maps/config': typeof ApiMapsConfigRoute
+  '/api/maps/geocode': typeof ApiMapsGeocodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +140,8 @@ export interface FileRoutesByTo {
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
+  '/api/maps/config': typeof ApiMapsConfigRoute
+  '/api/maps/geocode': typeof ApiMapsGeocodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +159,8 @@ export interface FileRoutesById {
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
+  '/api/maps/config': typeof ApiMapsConfigRoute
+  '/api/maps/geocode': typeof ApiMapsGeocodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +179,8 @@ export interface FileRouteTypes {
     | '/payment/canceled'
     | '/payment/success'
     | '/api/maps/autocomplete'
+    | '/api/maps/config'
+    | '/api/maps/geocode'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +197,8 @@ export interface FileRouteTypes {
     | '/payment/canceled'
     | '/payment/success'
     | '/api/maps/autocomplete'
+    | '/api/maps/config'
+    | '/api/maps/geocode'
   id:
     | '__root__'
     | '/'
@@ -193,6 +215,8 @@ export interface FileRouteTypes {
     | '/payment/canceled'
     | '/payment/success'
     | '/api/maps/autocomplete'
+    | '/api/maps/config'
+    | '/api/maps/geocode'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +234,8 @@ export interface RootRouteChildren {
   PaymentCanceledRoute: typeof PaymentCanceledRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   ApiMapsAutocompleteRoute: typeof ApiMapsAutocompleteRoute
+  ApiMapsConfigRoute: typeof ApiMapsConfigRoute
+  ApiMapsGeocodeRoute: typeof ApiMapsGeocodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +331,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChefAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/maps/geocode': {
+      id: '/api/maps/geocode'
+      path: '/api/maps/geocode'
+      fullPath: '/api/maps/geocode'
+      preLoaderRoute: typeof ApiMapsGeocodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/maps/config': {
+      id: '/api/maps/config'
+      path: '/api/maps/config'
+      fullPath: '/api/maps/config'
+      preLoaderRoute: typeof ApiMapsConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/maps/autocomplete': {
       id: '/api/maps/autocomplete'
       path: '/api/maps/autocomplete'
@@ -330,16 +370,9 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentCanceledRoute: PaymentCanceledRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   ApiMapsAutocompleteRoute: ApiMapsAutocompleteRoute,
+  ApiMapsConfigRoute: ApiMapsConfigRoute,
+  ApiMapsGeocodeRoute: ApiMapsGeocodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
