@@ -221,7 +221,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                   }
                 }}
                 onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
-                placeholder="Ex: Spot Burger, Pinheiros"
+                placeholder="Buscar restaurante..."
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-16 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 required
                 autoComplete="off"
