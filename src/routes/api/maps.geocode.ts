@@ -4,9 +4,10 @@ export const Route = createFileRoute("/api/maps/geocode")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.GOOGLE_MAPS_KEY;
+        // Prefer a server-only key without referrer restrictions for Geocoding.
+        const apiKey = process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_KEY;
         if (!apiKey) {
-          return new Response(JSON.stringify({ error: "GOOGLE_MAPS_KEY not set" }), {
+          return new Response(JSON.stringify({ error: "GOOGLE_GEOCODING_KEY not set" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });
