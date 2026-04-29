@@ -1073,7 +1073,10 @@ function Index() {
 
         {/* Map tab — full-bleed, fills space between header and bottom nav */}
         {mountedTabs.location && (
-          <div className={tab === "location" ? "absolute inset-0 pb-[calc(56px+env(safe-area-inset-bottom))]" : "hidden"}>
+          <div
+            className={tab === "location" ? "absolute inset-0 overflow-hidden" : "hidden"}
+            style={tab === "location" ? { bottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
+          >
             <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Carregando mapa...</div>}>
               <LazyMapView restaurants={restaurants} />
             </Suspense>
