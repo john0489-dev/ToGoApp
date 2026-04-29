@@ -60,8 +60,16 @@ async function searchPlaces(query: string): Promise<PlaceResult[]> {
 }
 
 function shortAddress(p: PlaceResult): string {
-  const parts = p.address.split(",").map((s) => s.trim());
-  // Try neighbourhood + city
+  const cleanPart = (s: string) =>
+    s
+      .replace(/\b\d{5}-?\d{3}\b/g, "") // CEP
+      .replace(/\bBrasil\b/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  const parts = p.address
+    .split(",")
+    .map((s) => cleanPart(s))
+    .filter(Boolean);
   if (p.neighbourhood) {
     const city = parts.find((x) => x && x !== p.neighbourhood && x !== p.name);
     return city ? `${p.neighbourhood}, ${city}` : p.neighbourhood;
@@ -133,11 +141,11 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
         setHasSearched(true);
         setShowDropdown(true);
       } catch (err) {
-        console.error("nominatim search failed", err);
+        console.error("places search failed", err);
       } finally {
         if (myReq === reqIdRef.current) setSearching(false);
       }
-    }, 400);
+    }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -205,7 +213,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-card-foreground mb-1">
-              Nome ou endereço do restaurante
+              Buscar restaurante
             </label>
             <div className="relative">
               <input
@@ -221,7 +229,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                   }
                 }}
                 onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
-                placeholder="Ex: Spot Burger, Pinheiros"
+                placeholder="Buscar restaurante..."
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-16 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 required
                 autoComplete="off"
