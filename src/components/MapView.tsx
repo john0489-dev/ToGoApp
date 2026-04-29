@@ -322,7 +322,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
 
   return (
     <div className="relative w-full h-full">
-      <div ref={containerRef} className="h-full w-full rounded-lg overflow-hidden bg-muted" />
+      <div ref={containerRef} className="h-full w-full overflow-hidden bg-muted" />
 
       {!ready && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
@@ -331,24 +331,38 @@ function MapViewImpl({ restaurants }: MapViewProps) {
         </div>
       )}
 
-      {/* Distance filter */}
+      {/* Distance filter — floating pill */}
       {ready && (
-        <div className="absolute top-3 left-3 z-10 flex gap-1 rounded-lg border border-[#ede9e3] bg-card/95 p-1 shadow-md backdrop-blur-sm">
-          {([0, 1, 3, 5] as DistanceFilter[]).map((d) => (
-            <button
-              key={d}
-              onClick={() => setDistance(d)}
-              disabled={d !== 0 && !userPos}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                distance === d
-                  ? "bg-[#c4844a] text-white"
-                  : "text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
-              }`}
-              title={d === 0 ? "Mostrar todos" : `Até ${d} km da minha localização`}
-            >
-              {d === 0 ? "Todos" : `${d}km`}
-            </button>
-          ))}
+        <div
+          className="absolute z-10 flex gap-1"
+          style={{
+            top: 12,
+            left: 12,
+            background: "rgba(255,255,255,0.95)",
+            borderRadius: 100,
+            padding: "6px 8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+          }}
+        >
+          {([0, 1, 3, 5] as DistanceFilter[]).map((d) => {
+            const active = distance === d;
+            return (
+              <button
+                key={d}
+                onClick={() => setDistance(d)}
+                disabled={d !== 0 && !userPos}
+                className="rounded-full text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  padding: "4px 10px",
+                  background: active ? "#c4844a" : "transparent",
+                  color: active ? "#fff" : "#666",
+                }}
+                title={d === 0 ? "Mostrar todos" : `Até ${d} km da minha localização`}
+              >
+                {d === 0 ? "Todos" : `${d}km`}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -356,7 +370,17 @@ function MapViewImpl({ restaurants }: MapViewProps) {
       {ready && (
         <button
           onClick={recenter}
-          className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-[#ede9e3] bg-card/95 text-foreground shadow-md backdrop-blur-sm hover:bg-accent transition-colors"
+          className="absolute z-10 flex items-center justify-center transition-colors hover:bg-accent"
+          style={{
+            top: 12,
+            right: 12,
+            width: 40,
+            height: 40,
+            background: "#fff",
+            borderRadius: "50%",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            color: "#1f1d1a",
+          }}
           title="Centralizar na minha localização"
           aria-label="Centralizar"
         >
