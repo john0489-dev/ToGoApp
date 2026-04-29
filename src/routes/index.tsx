@@ -673,7 +673,7 @@ function Index() {
         style={{
           background: "#faf9f7",
           borderBottom: "1px solid #ede9e3",
-          padding: "max(52px, calc(env(safe-area-inset-top) + 16px)) 20px 20px",
+          padding: "max(36px, calc(env(safe-area-inset-top) + 10px)) 20px 12px",
         }}
       >
         <div className="mx-auto max-w-lg">
