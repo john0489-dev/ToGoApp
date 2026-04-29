@@ -37,9 +37,7 @@ export const Route = createFileRoute("/api/maps/geocode")({
         url.searchParams.set("language", "pt-BR");
         url.searchParams.set("key", apiKey);
 
-        const res = await fetch(url.toString(), {
-          headers: { Referer: "https://togo.lovable.app" },
-        });
+        const res = await fetch(url.toString());
 
         if (!res.ok) {
           return new Response(
