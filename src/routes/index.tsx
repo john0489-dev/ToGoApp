@@ -665,8 +665,13 @@ function Index() {
 
   const activeList = lists.find((l) => l.id === activeListId);
 
+  const isMapTab = tab === "location";
+
   return (
-    <div className="min-h-[100dvh] flex flex-col" style={{ background: "#faf9f7" }}>
+    <div
+      className={isMapTab ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-[100dvh] flex flex-col"}
+      style={{ background: "#faf9f7" }}
+    >
       {/* Header */}
       <header
         className="shrink-0"
