@@ -1066,26 +1066,10 @@ function Index() {
             </div>
         </div>
 
-        {/* Map tab — mounted on first visit, kept alive after */}
+        {/* Map tab — full-bleed, fills space between header and bottom nav */}
         {mountedTabs.location && (
-          <div className={tab === "location" ? "px-4 py-3 pb-20 space-y-3" : "hidden"}>
-            <div className="flex items-center justify-between gap-2">
-              <button
-                onClick={handleGeocodeAll}
-                disabled={geocoding}
-                className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors disabled:opacity-50"
-                title="Buscar endereços reais via OpenStreetMap"
-              >
-                <Wand2 size={12} />
-                {geocoding ? "Buscando..." : "Corrigir endereços"}
-              </button>
-              {geocodeMsg && (
-                <span className="text-[11px] text-muted-foreground truncate flex-1 text-right">
-                  {geocodeMsg}
-                </span>
-              )}
-            </div>
-            <Suspense fallback={<div className="flex items-center justify-center py-20 text-sm text-muted-foreground">Carregando mapa...</div>}>
+          <div className={tab === "location" ? "absolute inset-0 pb-[calc(56px+env(safe-area-inset-bottom))]" : "hidden"}>
+            <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Carregando mapa...</div>}>
               <LazyMapView restaurants={restaurants} />
             </Suspense>
           </div>
