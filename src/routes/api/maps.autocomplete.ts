@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
             const text = await res.text().catch(() => "");
             console.error("[maps/autocomplete] Google API error", res.status, text);
             return Response.json(
-              { error: "Falha na busca de lugares", status: res.status, detail: text },
+              { error: "Falha na busca de lugares" },
               { status: 502 }
             );
           }
