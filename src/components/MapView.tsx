@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, memo, useCallback } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
@@ -52,15 +52,14 @@ async function loadGoogleMaps(): Promise<typeof google> {
     const res = await fetch("/api/maps/config", { credentials: "same-origin" });
     if (!res.ok) throw new Error("Failed to fetch maps config");
     const { apiKey } = (await res.json()) as { apiKey: string };
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-      libraries: ["maps", "marker"],
+    setOptions({
+      key: apiKey,
+      v: "weekly",
       language: "pt-BR",
       region: "BR",
     });
-    await loader.importLibrary("maps");
-    await loader.importLibrary("marker");
+    await importLibrary("maps");
+    await importLibrary("marker");
     return google;
   })();
   return loaderPromise;
