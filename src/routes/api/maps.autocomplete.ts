@@ -56,6 +56,13 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
                 languageCode: "pt-BR",
                 regionCode: "BR",
                 maxResultCount: 5,
+                // Bias results toward Brazil (rectangle covering all BR territory)
+                locationBias: {
+                  rectangle: {
+                    low: { latitude: -33.75, longitude: -73.99 },
+                    high: { latitude: 5.27, longitude: -34.79 },
+                  },
+                },
               }),
             }
           );
