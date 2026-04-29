@@ -880,8 +880,8 @@ function Index() {
             )}
           </div>
 
+          {!isMapTab && (
           <div
-            className="mt-3 grid grid-cols-3"
             style={{
               background: "#fff",
               border: "1px solid #ede9e3",
