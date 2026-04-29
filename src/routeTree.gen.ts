@@ -22,6 +22,7 @@ import { Route as PaymentCanceledRouteImport } from './routes/payment.canceled'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ApiSuggestCuisineRouteImport } from './routes/api/suggest-cuisine'
 import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
+import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autocomplete'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -88,6 +89,11 @@ const ApiChefAiRoute = ApiChefAiRouteImport.update({
   path: '/api/chef-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMapsAutocompleteRoute = ApiMapsAutocompleteRouteImport.update({
+  id: '/api/maps/autocomplete',
+  path: '/api/maps/autocomplete',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/invite/$code': typeof InviteCodeRoute
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
+  '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/invite/$code': typeof InviteCodeRoute
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
+  '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/invite/$code': typeof InviteCodeRoute
   '/payment/canceled': typeof PaymentCanceledRoute
   '/payment/success': typeof PaymentSuccessRoute
+  '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/payment/canceled'
     | '/payment/success'
+    | '/api/maps/autocomplete'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/payment/canceled'
     | '/payment/success'
+    | '/api/maps/autocomplete'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/payment/canceled'
     | '/payment/success'
+    | '/api/maps/autocomplete'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   InviteCodeRoute: typeof InviteCodeRoute
   PaymentCanceledRoute: typeof PaymentCanceledRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
+  ApiMapsAutocompleteRoute: typeof ApiMapsAutocompleteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChefAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/maps/autocomplete': {
+      id: '/api/maps/autocomplete'
+      path: '/api/maps/autocomplete'
+      fullPath: '/api/maps/autocomplete'
+      preLoaderRoute: typeof ApiMapsAutocompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteCodeRoute: InviteCodeRoute,
   PaymentCanceledRoute: PaymentCanceledRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
+  ApiMapsAutocompleteRoute: ApiMapsAutocompleteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
