@@ -49,6 +49,7 @@ export const Route = createFileRoute("/api/maps/geocode")({
 
         const data = (await res.json()) as {
           status: string;
+          error_message?: string;
           results?: Array<{
             formatted_address: string;
             geometry: { location: { lat: number; lng: number } };
@@ -57,7 +58,12 @@ export const Route = createFileRoute("/api/maps/geocode")({
 
         if (data.status !== "OK" || !data.results?.length) {
           return new Response(
-            JSON.stringify({ status: data.status, lat: null, lng: null }),
+            JSON.stringify({
+              status: data.status,
+              error_message: data.error_message ?? null,
+              lat: null,
+              lng: null,
+            }),
             { status: 200, headers: { "Content-Type": "application/json" } }
           );
         }
