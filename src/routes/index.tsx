@@ -124,6 +124,26 @@ function Index() {
       setMountedTabs((prev) => (prev[next] ? prev : { ...prev, [next]: true }));
     }
   }, []);
+
+  // Listen for "open restaurant" events from the map InfoWindow
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      setTab("list");
+      if (id) {
+        setTimeout(() => {
+          const el = document.querySelector(`[data-restaurant-id="${id}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("ring-2", "ring-[#c4844a]");
+            setTimeout(() => el.classList.remove("ring-2", "ring-[#c4844a]"), 1800);
+          }
+        }, 100);
+      }
+    };
+    window.addEventListener("togo:open-restaurant", handler);
+    return () => window.removeEventListener("togo:open-restaurant", handler);
+  }, []);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
