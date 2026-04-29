@@ -133,11 +133,11 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
         setHasSearched(true);
         setShowDropdown(true);
       } catch (err) {
-        console.error("nominatim search failed", err);
+        console.error("places search failed", err);
       } finally {
         if (myReq === reqIdRef.current) setSearching(false);
       }
-    }, 400);
+    }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
