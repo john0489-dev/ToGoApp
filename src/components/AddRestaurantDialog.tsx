@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Loader2, Sparkles } from "lucide-react";
+import { X, Loader2, Sparkles, Search, MapPin } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 
 interface PlaceResult {
@@ -92,6 +92,19 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
   const cuisineReqIdRef = useRef(0);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    if (!showDropdown) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [showDropdown]);
 
   const fetchCuisineSuggestion = async (n: string, addr: string) => {
     if (cuisineManual) return;
@@ -211,11 +224,16 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div ref={searchWrapperRef}>
             <label className="block text-sm font-medium text-card-foreground mb-1">
               Buscar restaurante
             </label>
             <div className="relative">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: "#c4944a" }}
+              />
               <input
                 type="text"
                 value={name}
@@ -229,19 +247,25 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                   }
                 }}
                 onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
-                placeholder="Buscar restaurante..."
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-16 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Buscar restaurante por nome..."
+                className="w-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                style={{
+                  background: "#fff",
+                  border: "1px solid #ede9e3",
+                  borderRadius: "12px",
+                  padding: "12px 40px 12px 38px",
+                }}
                 required
                 autoComplete="off"
               />
               {searching && (
-                <Loader2 size={16} className="absolute right-9 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
+                <Loader2 size={16} className="absolute right-10 top-1/2 -translate-y-1/2 animate-spin" style={{ color: "#c4944a" }} />
               )}
               {name && (
                 <button
                   type="button"
                   onClick={handleClearName}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
                   aria-label="Limpar"
                 >
                   <X size={14} />
@@ -257,7 +281,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                   background: "#fff",
                   border: "1px solid #ede9e3",
                   borderRadius: "12px",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
                 }}
               >
                 <ul>
@@ -271,16 +295,22 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                       <button
                         type="button"
                         onClick={() => handlePick(r)}
-                        className="w-full text-left transition-colors"
+                        className="w-full text-left transition-colors flex items-start gap-3"
                         style={{ padding: "12px 16px", background: "transparent" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "#faf9f7")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
-                        <div style={{ fontSize: "14px", fontWeight: 500, color: "#1a1a18" }}>
-                          {r.name}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "#aaa", marginTop: 2 }}>
-                          {shortAddress(r) || r.address}
+                        <MapPin size={16} style={{ color: "#c4944a", marginTop: 2, flexShrink: 0 }} />
+                        <div className="min-w-0 flex-1">
+                          <div style={{ fontSize: "14px", fontWeight: 600, color: "#1a1a18" }}>
+                            {r.name}
+                          </div>
+                          <div
+                            style={{ fontSize: "12px", color: "#aaa", marginTop: 2 }}
+                            className="truncate"
+                          >
+                            {shortAddress(r) || r.address}
+                          </div>
                         </div>
                       </button>
                     </li>
@@ -291,9 +321,20 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
 
             {/* No results */}
             {showDropdown && hasSearched && !searching && results.length === 0 && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Nenhum resultado. Digite o endereço manualmente.
-              </p>
+              <div
+                className="mt-1 text-center"
+                style={{
+                  background: "#fff",
+                  border: "1px solid #ede9e3",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  padding: "16px",
+                  fontSize: "13px",
+                  color: "#999",
+                }}
+              >
+                Nenhum resultado encontrado
+              </div>
             )}
           </div>
 
