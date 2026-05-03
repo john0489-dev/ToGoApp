@@ -57,7 +57,7 @@ function PricingPage() {
   const yearlyMonthly = (99 / 12).toFixed(2).replace(".", ",");
 
   const handleSubscribe = async () => {
-    if (!user) {
+    if (!user || !session?.access_token) {
       navigate({ to: "/login" });
       return;
     }
@@ -65,6 +65,7 @@ function PricingPage() {
       await openCheckout({
         priceId: billing === "monthly" ? "togo_pro_monthly" : "togo_pro_yearly",
         userId: user.id,
+        accessToken: session.access_token,
         customerEmail: user.email ?? undefined,
         successUrl: `${window.location.origin}/payment/success`,
       });

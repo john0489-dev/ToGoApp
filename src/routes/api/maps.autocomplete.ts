@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireApiAuth } from "@/lib/api-security";
 
 interface PlacePrediction {
   name: string;
@@ -48,6 +49,13 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const auth = await requireApiAuth(request, {
+            bucket: "maps-autocomplete",
+            limit: 120,
+            windowMs: 60_000,
+          });
+          if (auth.error) return auth.error;
+
           const apiKey = process.env.GOOGLE_MAPS_KEY;
           if (!apiKey) {
             return Response.json(

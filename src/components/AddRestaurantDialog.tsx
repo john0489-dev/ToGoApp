@@ -33,11 +33,14 @@ const CUISINE_OPTIONS = [
   "Vegetariano", "Vietnamita", "Outro"
 ];
 
-async function searchPlaces(query: string): Promise<PlaceResult[]> {
+async function searchPlaces(query: string, accessToken: string): Promise<PlaceResult[]> {
   if (query.length < 3) return [];
   const res = await fetch("/api/maps/autocomplete", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify({ query }),
   });
   if (!res.ok) return [];
@@ -77,7 +80,7 @@ function shortAddress(p: PlaceResult): string {
   return parts.slice(1, 3).join(", ");
 }
 
-export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialogProps) {
+export function AddRestaurantDialog({ open, onClose, onAdd, session }: AddRestaurantDialogProps) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [cuisine, setCuisine] = useState("Bar");
@@ -114,7 +117,10 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     try {
       const res = await fetch("/api/suggest-cuisine", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ name: n.trim(), address: addr.trim() }),
       });
       if (!res.ok) return;
@@ -148,7 +154,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
       const myReq = ++reqIdRef.current;
       setSearching(true);
       try {
-        const res = await searchPlaces(q);
+        const res = await searchPlaces(q, session.access_token);
         if (myReq !== reqIdRef.current) return;
         setResults(res);
         setHasSearched(true);

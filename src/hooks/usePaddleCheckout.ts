@@ -5,6 +5,7 @@ interface OpenOpts {
   priceId: string;
   customerEmail?: string;
   userId: string;
+  accessToken: string;
   successUrl?: string;
 }
 
@@ -15,7 +16,7 @@ export function usePaddleCheckout() {
     setLoading(true);
     try {
       await initializePaddle();
-      const paddlePriceId = await getPaddlePriceId(opts.priceId);
+      const paddlePriceId = await getPaddlePriceId(opts.priceId, opts.accessToken);
 
       window.Paddle.Checkout.open({
         items: [{ priceId: paddlePriceId, quantity: 1 }],

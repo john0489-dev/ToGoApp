@@ -4,6 +4,7 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
+import { useAuth } from "@/hooks/useAuth";
 
 type Restaurant = {
   id: string;
@@ -47,10 +48,13 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
 // Cache loader promise across mounts
 let loaderPromise: Promise<typeof google> | null = null;
 
-async function loadGoogleMaps(): Promise<typeof google> {
+async function loadGoogleMaps(accessToken: string): Promise<typeof google> {
   if (loaderPromise) return loaderPromise;
   loaderPromise = (async () => {
-    const res = await fetch("/api/maps/config", { credentials: "same-origin" });
+    const res = await fetch("/api/maps/config", {
+      credentials: "same-origin",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
     if (!res.ok) throw new Error("Failed to fetch maps config");
     const { apiKey } = (await res.json()) as { apiKey: string };
     setOptions({
@@ -62,7 +66,10 @@ async function loadGoogleMaps(): Promise<typeof google> {
     await importLibrary("maps");
     await importLibrary("marker");
     return google;
-  })();
+  })().catch((error) => {
+    loaderPromise = null;
+    throw error;
+  });
   return loaderPromise;
 }
 
@@ -78,6 +85,8 @@ function markerSvg(color: string) {
 }
 
 function MapViewImpl({ restaurants }: MapViewProps) {
+  const { session } = useAuth();
+  const accessToken = session?.access_token;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -94,8 +103,9 @@ function MapViewImpl({ restaurants }: MapViewProps) {
 
   // ---- Init map once ----
   useEffect(() => {
+    if (!accessToken) return;
     let cancelled = false;
-    loadGoogleMaps()
+    loadGoogleMaps(accessToken)
       .then((g) => {
         if (cancelled || !containerRef.current) return;
         mapRef.current = new g.maps.Map(containerRef.current, {
@@ -118,7 +128,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [accessToken]);
 
   // ---- Get user location ----
   useEffect(() => {
@@ -139,7 +149,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
 
   // ---- Geocode missing addresses (background) ----
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !accessToken) return;
     const missing = restaurants.filter(
       (r) => (r.latitude == null || r.longitude == null) && !geocodedCoords[r.id]
     );
@@ -156,7 +166,10 @@ function MapViewImpl({ restaurants }: MapViewProps) {
         try {
           const res = await fetch("/api/maps/geocode", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
             body: JSON.stringify({ address: query }),
           });
           if (!res.ok) continue;
@@ -183,7 +196,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, restaurants]);
+  }, [ready, restaurants, accessToken]);
 
   // ---- Build marker data ----
   const markersData = useMemo(() => {

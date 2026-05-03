@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireApiAuth } from "@/lib/api-security";
 
 interface RequestBody {
   name?: string;
@@ -10,6 +11,13 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const auth = await requireApiAuth(request, {
+            bucket: "suggest-cuisine",
+            limit: 60,
+            windowMs: 60_000,
+          });
+          if (auth.error) return auth.error;
+
           const body = (await request.json()) as RequestBody;
           const name = (body.name || "").trim().slice(0, 200);
           const address = (body.address || "").trim().slice(0, 300);

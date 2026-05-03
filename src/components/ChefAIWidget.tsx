@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/hooks/useAuth";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
@@ -28,6 +29,7 @@ const QUICK_PROMPTS: { emoji: string; label: string; prompt: string }[] = [
 ];
 
 export function ChefAIWidget({ restaurants }: Props) {
+  const { session } = useAuth();
   const [open, setOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(true);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
@@ -49,6 +51,13 @@ export function ChefAIWidget({ restaurants }: Props) {
   const send = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
+    if (!session?.access_token) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "⚠️ Faça login novamente para usar o Chef AI." },
+      ]);
+      return;
+    }
     const userMsg: ChatMsg = { role: "user", content: trimmed };
     const next = [...messages, userMsg];
     setMessages(next);
@@ -57,7 +66,10 @@ export function ChefAIWidget({ restaurants }: Props) {
     try {
       const resp = await fetch("/api/chef-ai", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ messages: next, restaurants }),
       });
       if (!resp.ok) {

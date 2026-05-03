@@ -62,8 +62,9 @@ export async function initializePaddle(eventCallback?: (e: any) => void): Promis
   return initPromise;
 }
 
-export async function getPaddlePriceId(priceId: string): Promise<string> {
+export async function getPaddlePriceId(priceId: string, accessToken: string): Promise<string> {
   const { data, error } = await supabase.functions.invoke("get-paddle-price", {
+    headers: { Authorization: `Bearer ${accessToken}` },
     body: { priceId, environment: paddleEnv() },
   });
   if (error || !data?.paddleId) {
