@@ -1,20 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireApiAuth } from "@/lib/api-security";
 
 export const Route = createFileRoute("/api/maps/config")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const auth = await requireApiAuth(request, {
-          bucket: "maps-config",
-          limit: 60,
-          windowMs: 60_000,
-        });
-        if (auth.error) return auth.error;
-
-        const apiKey = process.env.GOOGLE_MAPS_BROWSER_KEY;
+      GET: async () => {
+        const apiKey = process.env.GOOGLE_MAPS_KEY;
         if (!apiKey) {
-          return new Response(JSON.stringify({ error: "GOOGLE_MAPS_BROWSER_KEY not set" }), {
+          return new Response(JSON.stringify({ error: "GOOGLE_MAPS_KEY not set" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });

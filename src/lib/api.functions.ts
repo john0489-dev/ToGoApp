@@ -90,11 +90,7 @@ const FREE_RESTAURANT_LIMIT = 20;
 const FREE_LIST_LIMIT = 3;
 
 async function fetchUserPlan(supabase: any, userId: string): Promise<"free" | "pro"> {
-  const paymentEnvironment = process.env.PAYMENTS_ENV === "sandbox" ? "sandbox" : "live";
-  const { data, error } = await supabase.rpc("get_user_plan", {
-    _user_id: userId,
-    _environment: paymentEnvironment,
-  });
+  const { data, error } = await supabase.rpc("get_user_plan", { _user_id: userId });
   if (error) {
     console.error("[fetchUserPlan]", error);
     return "free";

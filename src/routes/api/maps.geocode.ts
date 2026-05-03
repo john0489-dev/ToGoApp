@@ -1,17 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireApiAuth } from "@/lib/api-security";
 
 export const Route = createFileRoute("/api/maps/geocode")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const auth = await requireApiAuth(request, {
-          bucket: "maps-geocode",
-          limit: 120,
-          windowMs: 60_000,
-        });
-        if (auth.error) return auth.error;
-
         // Prefer a server-only key without referrer restrictions for Geocoding.
         const apiKey = process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_KEY;
         if (!apiKey) {

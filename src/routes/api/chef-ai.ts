@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireApiAuth } from "@/lib/api-security";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
@@ -51,13 +50,6 @@ export const Route = createFileRoute("/api/chef-ai")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const auth = await requireApiAuth(request, {
-            bucket: "chef-ai",
-            limit: 20,
-            windowMs: 60_000,
-          });
-          if (auth.error) return auth.error;
-
           const body = (await request.json()) as RequestBody;
           if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
             return Response.json({ error: "messages required" }, { status: 400 });
