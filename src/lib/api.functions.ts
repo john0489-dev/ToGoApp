@@ -585,7 +585,8 @@ export const getListMembers = createServerFn({ method: "POST" })
 
     if (error) safeError("getListMembers", error);
 
-    const result = (members ?? []).map((m: any) => ({
+    type MemberRow = { user_id: string; role: Database["public"]["Enums"]["list_role"]; joined_at: string; email: string | null };
+    const result = ((members ?? []) as MemberRow[]).map((m) => ({
       user_id: m.user_id,
       role: m.role,
       joined_at: m.joined_at,
