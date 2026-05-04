@@ -46,6 +46,7 @@ export function useRestaurants(activeListId: string | null, accessToken: string 
   const restaurantsQuery = useQuery({
     queryKey: restaurantsQueryKey,
     enabled: !!activeListId && !!accessToken,
+    staleTime: 30 * 1000,
     queryFn: async () => {
       if (!activeListId || !accessToken) return [] as Restaurant[];
       const { restaurants: data } = await getRestaurants({
