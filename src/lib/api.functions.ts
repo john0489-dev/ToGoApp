@@ -106,7 +106,7 @@ async function fetchUserPlan(supabase: DB, userId: string): Promise<"free" | "pr
   return data === "pro" ? "pro" : "free";
 }
 
-async function countUserRestaurants(supabase: any, userId: string): Promise<number> {
+async function countUserRestaurants(supabase: DB, userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("restaurants")
     .select("*", { count: "exact", head: true })
