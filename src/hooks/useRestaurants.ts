@@ -88,6 +88,7 @@ export function useRestaurants(activeListId: string | null, accessToken: string 
       if (!listId || !token || listId === activeListId) return;
       queryClient.prefetchQuery({
         queryKey: ["restaurants", listId],
+        staleTime: 30 * 1000,
         queryFn: async () => {
           const { restaurants: data } = await getRestaurants({
             data: { listId },
