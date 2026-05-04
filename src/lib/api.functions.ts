@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+type DB = SupabaseClient<Database>;
 
 // Safe error helper — logs details server-side, returns generic message to client
 function safeError(context: string, error: { message?: string; code?: string }): never {
