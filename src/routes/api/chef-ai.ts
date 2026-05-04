@@ -51,6 +51,13 @@ export const Route = createFileRoute("/api/chef-ai")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const ip = getClientIp(request);
+          if (!checkRateLimit(`chef-ai:${ip}`, 20, 60_000)) {
+            return Response.json(
+              { error: "Muitas requisições. Aguarde um instante e tente novamente." },
+              { status: 429 }
+            );
+          }
           const body = (await request.json()) as RequestBody;
           if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
             return Response.json({ error: "messages required" }, { status: 400 });
