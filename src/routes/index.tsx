@@ -190,8 +190,8 @@ function Index() {
         }, 100);
       }
     };
-    window.addEventListener("togo:open-restaurant", handler as EventListener);
-    return () => window.removeEventListener("togo:open-restaurant", handler as EventListener);
+    window.addEventListener("togo:open-restaurant", handler);
+    return () => window.removeEventListener("togo:open-restaurant", handler);
   }, []);
 
   useEffect(() => {
