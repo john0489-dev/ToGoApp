@@ -27,6 +27,7 @@ export function useLists(params: {
   const listsQuery = useQuery({
     queryKey: listsQueryKey,
     enabled: !!isAuthenticated && !!accessToken && !!userId,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { lists: data } = await getUserLists({
         headers: { Authorization: `Bearer ${accessToken}` },
