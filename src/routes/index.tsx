@@ -22,6 +22,12 @@ import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
 import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
 import { toast } from "sonner";
 
+declare global {
+  interface WindowEventMap {
+    "togo:open-restaurant": CustomEvent<{ id: string }>;
+  }
+}
+
 const LazyMapView = lazy(() => import("@/components/MapView").then(m => ({ default: m.MapView })));
 const LazyNearMeView = lazy(() => import("@/components/NearMeView").then(m => ({ default: m.NearMeView })));
 const LazyExportPdfDialog = lazy(() => import("@/components/ExportPdfDialog").then(m => ({ default: m.ExportPdfDialog })));
@@ -170,8 +176,8 @@ function Index() {
 
   // Listen for "open restaurant" events from the map InfoWindow
   useEffect(() => {
-    const handler = (e: Event) => {
-      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+    const handler = (e: CustomEvent<{ id: string }>) => {
+      const id = e.detail?.id;
       setTab("list");
       if (id) {
         setTimeout(() => {

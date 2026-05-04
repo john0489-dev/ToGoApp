@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+type DB = SupabaseClient<Database>;
 
 // Safe error helper — logs details server-side, returns generic message to client
 function safeError(context: string, error: { message?: string; code?: string }): never {
@@ -22,10 +26,14 @@ export const getUserLists = createServerFn({ method: "GET" })
 
     if (error) safeError("getUserLists", error);
 
-    const lists = (data ?? []).map((m: any) => ({
-      ...m.lists,
-      role: m.role,
-    }));
+    type ListRow = Tables<"lists">;
+    type Row = { list_id: string; role: Database["public"]["Enums"]["list_role"]; lists: ListRow | null };
+    const lists = ((data ?? []) as Row[])
+      .filter((m) => m.lists !== null)
+      .map((m) => ({
+        ...(m.lists as ListRow),
+        role: m.role,
+      }));
     return { lists };
   });
 
@@ -89,7 +97,7 @@ export const getRestaurants = createServerFn({ method: "POST" })
 const FREE_RESTAURANT_LIMIT = 20;
 const FREE_LIST_LIMIT = 3;
 
-async function fetchUserPlan(supabase: any, userId: string): Promise<"free" | "pro"> {
+async function fetchUserPlan(supabase: DB, userId: string): Promise<"free" | "pro"> {
   const { data, error } = await supabase.rpc("get_user_plan", { _user_id: userId });
   if (error) {
     console.error("[fetchUserPlan]", error);
@@ -98,7 +106,7 @@ async function fetchUserPlan(supabase: any, userId: string): Promise<"free" | "p
   return data === "pro" ? "pro" : "free";
 }
 
-async function countUserRestaurants(supabase: any, userId: string): Promise<number> {
+async function countUserRestaurants(supabase: DB, userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("restaurants")
     .select("*", { count: "exact", head: true })
@@ -110,7 +118,7 @@ async function countUserRestaurants(supabase: any, userId: string): Promise<numb
   return count ?? 0;
 }
 
-async function countUserOwnedLists(supabase: any, userId: string): Promise<number> {
+async function countUserOwnedLists(supabase: DB, userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("lists")
     .select("*", { count: "exact", head: true })
@@ -186,7 +194,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
       }
     }
 
-    const insert: Record<string, any> = {
+    const insert: TablesInsert<"restaurants"> = {
       list_id: data.listId,
       name: data.name,
       location: data.location,
@@ -211,7 +219,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
 
     const { data: restaurant, error } = await supabase
       .from("restaurants")
-      .insert(insert as any)
+      .insert(insert)
       .select()
       .single();
 
@@ -254,19 +262,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const update: {
-      visited?: boolean;
-      rating?: number;
-      location?: string;
-      address?: string;
-      latitude?: number;
-      longitude?: number;
-      photos?: string[];
-      notes?: string;
-      tags?: string[];
-      occasion?: string;
-      price_range?: string;
-    } = {};
+    const update: TablesUpdate<"restaurants"> = {};
     if (data.visited !== undefined) update.visited = data.visited;
     if (data.rating !== undefined) update.rating = data.rating;
     if (data.location !== undefined) update.location = data.location;
@@ -474,7 +470,7 @@ export const geocodeListRestaurants = createServerFn({ method: "POST" })
     let failed = 0;
 
     for (let i = 0; i < pending.length; i++) {
-      const r: any = pending[i];
+      const r = pending[i];
       const bias = r.location?.trim() || "São Paulo, Brasil";
       const queries = [`${r.name}, ${bias}`, `restaurante ${r.name}, ${bias}`, `${r.name} ${bias}`];
 
@@ -589,7 +585,8 @@ export const getListMembers = createServerFn({ method: "POST" })
 
     if (error) safeError("getListMembers", error);
 
-    const result = (members ?? []).map((m: any) => ({
+    type MemberRow = { user_id: string; role: Database["public"]["Enums"]["list_role"]; joined_at: string; email: string | null };
+    const result = ((members ?? []) as MemberRow[]).map((m) => ({
       user_id: m.user_id,
       role: m.role,
       joined_at: m.joined_at,
