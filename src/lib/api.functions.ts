@@ -194,7 +194,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
       }
     }
 
-    const insert: Record<string, any> = {
+    const insert: TablesInsert<"restaurants"> = {
       list_id: data.listId,
       name: data.name,
       location: data.location,
@@ -219,7 +219,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
 
     const { data: restaurant, error } = await supabase
       .from("restaurants")
-      .insert(insert as any)
+      .insert(insert)
       .select()
       .single();
 
