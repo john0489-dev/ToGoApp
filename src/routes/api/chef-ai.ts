@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
