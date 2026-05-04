@@ -5,6 +5,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { PlanProvider } from "@/hooks/usePlan";
 import { UpgradeModalProvider } from "@/hooks/useUpgradeModal";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
