@@ -262,19 +262,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const update: {
-      visited?: boolean;
-      rating?: number;
-      location?: string;
-      address?: string;
-      latitude?: number;
-      longitude?: number;
-      photos?: string[];
-      notes?: string;
-      tags?: string[];
-      occasion?: string;
-      price_range?: string;
-    } = {};
+    const update: TablesUpdate<"restaurants"> = {};
     if (data.visited !== undefined) update.visited = data.visited;
     if (data.rating !== undefined) update.rating = data.rating;
     if (data.location !== undefined) update.location = data.location;
