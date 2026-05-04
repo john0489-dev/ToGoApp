@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useMemo, useCallback, useEffect, useRef, useDeferredValue } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Sparkles } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
@@ -9,11 +9,14 @@ import { InviteDialog } from "@/components/InviteDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
 import { useUpgradeModal } from "@/hooks/useUpgradeModal";
+import { useLists } from "@/hooks/useLists";
+import { useRestaurants } from "@/hooks/useRestaurants";
+import { useFilters, type StatusFilter } from "@/hooks/useFilters";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdvancedFiltersSheet, EMPTY_ADVANCED_FILTERS, countActiveFilters, type AdvancedFilters } from "@/components/AdvancedFiltersSheet";
+import { AdvancedFiltersSheet } from "@/components/AdvancedFiltersSheet";
 import { SlidersHorizontal, FileDown } from "lucide-react";
 import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
 import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
@@ -26,13 +29,7 @@ const LazyChefAIWidget = lazy(() => import("@/components/ChefAIWidget").then(m =
 
 const PAGE_SIZE = 20;
 import {
-  getUserLists,
   getRestaurants,
-  addRestaurant,
-  updateRestaurant,
-  deleteRestaurant,
-  createList,
-  deleteList,
   seedDefaultRestaurants,
   geocodeListRestaurants,
   isAdmin as isAdminFn,
