@@ -470,7 +470,7 @@ export const geocodeListRestaurants = createServerFn({ method: "POST" })
     let failed = 0;
 
     for (let i = 0; i < pending.length; i++) {
-      const r: any = pending[i];
+      const r = pending[i];
       const bias = r.location?.trim() || "São Paulo, Brasil";
       const queries = [`${r.name}, ${bias}`, `restaurante ${r.name}, ${bias}`, `${r.name} ${bias}`];
 
