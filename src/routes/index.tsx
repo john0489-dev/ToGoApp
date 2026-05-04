@@ -22,6 +22,12 @@ import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
 import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
 import { toast } from "sonner";
 
+declare global {
+  interface WindowEventMap {
+    "togo:open-restaurant": CustomEvent<{ id: string }>;
+  }
+}
+
 const LazyMapView = lazy(() => import("@/components/MapView").then(m => ({ default: m.MapView })));
 const LazyNearMeView = lazy(() => import("@/components/NearMeView").then(m => ({ default: m.NearMeView })));
 const LazyExportPdfDialog = lazy(() => import("@/components/ExportPdfDialog").then(m => ({ default: m.ExportPdfDialog })));
