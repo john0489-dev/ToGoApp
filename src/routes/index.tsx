@@ -211,14 +211,6 @@ function Index() {
   const restaurants = restaurantsQuery.data ?? [];
   const loading = restaurantsQuery.isLoading;
 
-  // [Debug] temporary logs to diagnose dashboard load
-  if (typeof window !== "undefined") {
-    console.log("[Debug] isAuthenticated:", isAuthenticated, "accessToken:", !!accessToken);
-    console.log("[Debug] lists:", lists);
-    console.log("[Debug] activeListId:", activeListId);
-    console.log("[Debug] restaurants:", restaurants.length);
-  }
-
   // Helper to update the cached list for the active list (used by optimistic mutations)
   const setRestaurants = useCallback(
     (updater: Restaurant[] | ((prev: Restaurant[]) => Restaurant[])) => {
