@@ -26,10 +26,14 @@ export const getUserLists = createServerFn({ method: "GET" })
 
     if (error) safeError("getUserLists", error);
 
-    const lists = (data ?? []).map((m: any) => ({
-      ...m.lists,
-      role: m.role,
-    }));
+    type ListRow = Tables<"lists">;
+    type Row = { list_id: string; role: Database["public"]["Enums"]["list_role"]; lists: ListRow | null };
+    const lists = ((data ?? []) as Row[])
+      .filter((m) => m.lists !== null)
+      .map((m) => ({
+        ...(m.lists as ListRow),
+        role: m.role,
+      }));
     return { lists };
   });
 
