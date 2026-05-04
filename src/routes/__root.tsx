@@ -5,6 +5,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { PlanProvider } from "@/hooks/usePlan";
 import { UpgradeModalProvider } from "@/hooks/useUpgradeModal";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
@@ -135,18 +136,20 @@ function RootComponent() {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PlanProvider>
-          <UpgradeModalProvider>
-            <PaymentTestModeBanner />
-            <Outlet />
-            <GlobalLegalFooter />
-            <Toaster />
-          </UpgradeModalProvider>
-        </PlanProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <PlanProvider>
+            <UpgradeModalProvider>
+              <PaymentTestModeBanner />
+              <Outlet />
+              <GlobalLegalFooter />
+              <Toaster />
+            </UpgradeModalProvider>
+          </PlanProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

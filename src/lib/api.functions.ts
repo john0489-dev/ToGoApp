@@ -246,6 +246,10 @@ export const updateRestaurant = createServerFn({ method: "POST" })
       latitude: z.number().optional(),
       longitude: z.number().optional(),
       photos: z.array(z.string().url().max(1000)).max(3).optional(),
+      notes: z.string().max(2000).optional(),
+      tags: z.array(z.string().max(40)).max(20).optional(),
+      occasion: z.string().max(100).optional(),
+      price_range: z.enum(["$", "$$", "$$$", "$$$$"]).optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -258,6 +262,10 @@ export const updateRestaurant = createServerFn({ method: "POST" })
       latitude?: number;
       longitude?: number;
       photos?: string[];
+      notes?: string;
+      tags?: string[];
+      occasion?: string;
+      price_range?: string;
     } = {};
     if (data.visited !== undefined) update.visited = data.visited;
     if (data.rating !== undefined) update.rating = data.rating;
@@ -266,6 +274,10 @@ export const updateRestaurant = createServerFn({ method: "POST" })
     if (data.latitude !== undefined) update.latitude = data.latitude;
     if (data.longitude !== undefined) update.longitude = data.longitude;
     if (data.photos !== undefined) update.photos = data.photos;
+    if (data.notes !== undefined) update.notes = data.notes;
+    if (data.tags !== undefined) update.tags = data.tags;
+    if (data.occasion !== undefined) update.occasion = data.occasion;
+    if (data.price_range !== undefined) update.price_range = data.price_range;
 
     const { error } = await supabase
       .from("restaurants")

@@ -24,6 +24,9 @@ const defaultState: PlanState = {
   hasFeature: () => false,
 };
 
+const PLAN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let planCache: { token: string; at: number; data: Omit<PlanState, "refresh" | "hasFeature"> } | null = null;
+
 const PlanContext = createContext<PlanState>(defaultState);
 
 export function PlanProvider({ children }: { children: ReactNode }) {
@@ -38,27 +41,41 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     loading: true,
   });
 
-  const load = useCallback(async () => {
-    if (!accessToken) {
-      setState((s) => ({ ...s, loading: false }));
-      return;
-    }
-    try {
-      const res = await getCurrentPlan({
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      setState({
-        plan: res.plan as Plan,
-        proExpiresAt: res.proExpiresAt,
-        usage: res.usage,
-        limits: res.limits,
-        loading: false,
-      });
-    } catch (err) {
-      console.error("[usePlan] load failed:", err);
-      setState((s) => ({ ...s, loading: false }));
-    }
-  }, [accessToken]);
+  const load = useCallback(
+    async (force = false) => {
+      if (!accessToken) {
+        setState((s) => ({ ...s, loading: false }));
+        return;
+      }
+      if (
+        !force &&
+        planCache &&
+        planCache.token === accessToken &&
+        Date.now() - planCache.at < PLAN_CACHE_TTL
+      ) {
+        setState(planCache.data);
+        return;
+      }
+      try {
+        const res = await getCurrentPlan({
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const next = {
+          plan: res.plan as Plan,
+          proExpiresAt: res.proExpiresAt,
+          usage: res.usage,
+          limits: res.limits,
+          loading: false,
+        };
+        planCache = { token: accessToken, at: Date.now(), data: next };
+        setState(next);
+      } catch (err) {
+        console.error("[usePlan] load failed:", err);
+        setState((s) => ({ ...s, loading: false }));
+      }
+    },
+    [accessToken]
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -80,7 +97,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PlanContext.Provider value={{ ...state, refresh: load, hasFeature }}>
+    <PlanContext.Provider value={{ ...state, refresh: () => load(true), hasFeature }}>
       {children}
     </PlanContext.Provider>
   );
