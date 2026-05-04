@@ -136,18 +136,20 @@ function RootComponent() {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PlanProvider>
-          <UpgradeModalProvider>
-            <PaymentTestModeBanner />
-            <Outlet />
-            <GlobalLegalFooter />
-            <Toaster />
-          </UpgradeModalProvider>
-        </PlanProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <PlanProvider>
+            <UpgradeModalProvider>
+              <PaymentTestModeBanner />
+              <Outlet />
+              <GlobalLegalFooter />
+              <Toaster />
+            </UpgradeModalProvider>
+          </PlanProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
