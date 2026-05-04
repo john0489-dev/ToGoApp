@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useMemo, useCallback, useEffect, useRef, useDeferredValue } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Sparkles } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
@@ -9,11 +9,14 @@ import { InviteDialog } from "@/components/InviteDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
 import { useUpgradeModal } from "@/hooks/useUpgradeModal";
+import { useLists } from "@/hooks/useLists";
+import { useRestaurants } from "@/hooks/useRestaurants";
+import { useFilters, type StatusFilter } from "@/hooks/useFilters";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdvancedFiltersSheet, EMPTY_ADVANCED_FILTERS, countActiveFilters, type AdvancedFilters } from "@/components/AdvancedFiltersSheet";
+import { AdvancedFiltersSheet } from "@/components/AdvancedFiltersSheet";
 import { SlidersHorizontal, FileDown } from "lucide-react";
 import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
 import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
@@ -26,13 +29,7 @@ const LazyChefAIWidget = lazy(() => import("@/components/ChefAIWidget").then(m =
 
 const PAGE_SIZE = 20;
 import {
-  getUserLists,
   getRestaurants,
-  addRestaurant,
-  updateRestaurant,
-  deleteRestaurant,
-  createList,
-  deleteList,
   seedDefaultRestaurants,
   geocodeListRestaurants,
   isAdmin as isAdminFn,
@@ -60,24 +57,6 @@ export const Route = createFileRoute("/")({
 });
 
 type Tab = "list" | "location" | "nearme";
-type StatusFilter = "all" | "visited" | "to-visit";
-type Restaurant = {
-  id: string;
-  name: string;
-  location: string;
-  cuisine: string;
-  visited: boolean;
-  rating: number;
-  list_id: string;
-  added_by: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  address?: string | null;
-  price_range?: string | null;
-  occasion?: string | null;
-  tags?: string[] | null;
-  photos?: string[] | null;
-};
 type ListItem = {
   id: string;
   name: string;
@@ -114,9 +93,73 @@ function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const routeSearch = Route.useSearch();
-  const [activeListId, setActiveListId] = useState<string | null>(routeSearch.list ?? null);
+
+  const accessToken = session?.access_token;
+  const userId = user?.id;
+
+  // Lists
+  const {
+    lists,
+    isLoading: listsLoading,
+    isFetching: listsFetching,
+    isSuccess: listsSuccess,
+    listsQueryKey,
+    activeListId,
+    setActiveListId,
+    setLists,
+    createList: createListAction,
+    deleteList: deleteListAction,
+  } = useLists({
+    isAuthenticated,
+    accessToken,
+    userId,
+    initialActiveListId: routeSearch.list ?? null,
+  });
+
+  // Restaurants for the active list
+  const {
+    restaurants,
+    isLoading: loading,
+    restaurantsRef,
+    tokenRef,
+    setRestaurants,
+    loadRestaurants,
+    prefetchList,
+    addRestaurant: addRestaurantAction,
+    deleteRestaurant: deleteRestaurantAction,
+    toggleVisited,
+    updateRestaurant: updateRestaurantAction,
+  } = useRestaurants(activeListId, accessToken);
+
+  // Filters & derived collections
+  const {
+    search,
+    setSearch,
+    deferredSearch,
+    statusFilter,
+    setStatusFilter,
+    cuisineFilter,
+    setCuisineFilter,
+    advancedFilters,
+    setAdvancedFilters,
+    advancedActiveCount,
+    cuisines,
+    availableTags,
+    availableNeighborhoods,
+    filteredRestaurants: filtered,
+  } = useFilters(restaurants);
+
   const [tab, setTab] = useState<Tab>("list");
   const [mountedTabs, setMountedTabs] = useState<{ location: boolean; nearme: boolean }>({ location: false, nearme: false });
+  const [cuisineDropdownOpen, setCuisineDropdownOpen] = useState(false);
+  const cuisineDropdownRef = useRef<HTMLDivElement>(null);
+  const [advancedSheetOpen, setAdvancedSheetOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [listDropdown, setListDropdown] = useState(false);
+  const [newListName, setNewListName] = useState("");
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   const switchTab = useCallback((next: Tab) => {
     setTab(next);
@@ -144,114 +187,6 @@ function Index() {
     window.addEventListener("togo:open-restaurant", handler);
     return () => window.removeEventListener("togo:open-restaurant", handler);
   }, []);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
-  const [cuisineDropdownOpen, setCuisineDropdownOpen] = useState(false);
-  const cuisineDropdownRef = useRef<HTMLDivElement>(null);
-  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(EMPTY_ADVANCED_FILTERS);
-  const [advancedSheetOpen, setAdvancedSheetOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [listDropdown, setListDropdown] = useState(false);
-  const [newListName, setNewListName] = useState("");
-  const [isUserAdmin, setIsUserAdmin] = useState(false);
-
-  // Stable token reference for effect deps
-  const accessToken = session?.access_token;
-  const userId = user?.id;
-
-  // Lists query — keyed on userId so it refetches when user changes,
-  // and only enabled once auth is fully resolved.
-  const listsQueryKey = useMemo(() => ["lists", userId] as const, [userId]);
-  const listsQuery = useQuery({
-    queryKey: listsQueryKey,
-    enabled: !!isAuthenticated && !!accessToken && !!userId,
-    queryFn: async () => {
-      const { lists: data } = await getUserLists({
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      return (data ?? [])
-        .map((l: any) => ({ id: l.id, name: l.name, created_by: l.created_by }))
-        .filter((l: ListItem) => !!l.id) as ListItem[];
-    },
-  });
-  const lists = listsQuery.data ?? [];
-
-  const setLists = useCallback(
-    (updater: ListItem[] | ((prev: ListItem[]) => ListItem[])) => {
-      queryClient.setQueryData<ListItem[]>(listsQueryKey, (prev) => {
-        const base = prev ?? [];
-        return typeof updater === "function" ? (updater as (p: ListItem[]) => ListItem[])(base) : updater;
-      });
-    },
-    [queryClient, listsQueryKey]
-  );
-
-  // Restaurants are cached by [list_id]. Switching lists and coming back is instant.
-  const restaurantsQueryKey = useMemo(
-    () => ["restaurants", activeListId] as const,
-    [activeListId]
-  );
-
-  const restaurantsQuery = useQuery({
-    queryKey: restaurantsQueryKey,
-    enabled: !!activeListId && !!accessToken,
-    queryFn: async () => {
-      if (!activeListId || !accessToken) return [] as Restaurant[];
-      const { restaurants: data } = await getRestaurants({
-        data: { listId: activeListId },
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      return (data ?? []) as Restaurant[];
-    },
-  });
-
-  const restaurants = restaurantsQuery.data ?? [];
-  const loading = restaurantsQuery.isLoading;
-
-  // Helper to update the cached list for the active list (used by optimistic mutations)
-  const setRestaurants = useCallback(
-    (updater: Restaurant[] | ((prev: Restaurant[]) => Restaurant[])) => {
-      queryClient.setQueryData<Restaurant[]>(restaurantsQueryKey, (prev) => {
-        const base = prev ?? [];
-        return typeof updater === "function" ? (updater as (p: Restaurant[]) => Restaurant[])(base) : updater;
-      });
-    },
-    [queryClient, restaurantsQueryKey]
-  );
-
-  const loadRestaurants = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: restaurantsQueryKey });
-  }, [queryClient, restaurantsQueryKey]);
-
-  // Prefetch a list's restaurants on hover/focus of the list selector
-  const prefetchList = useCallback(
-    (listId: string) => {
-      const token = tokenRef.current;
-      if (!listId || !token || listId === activeListId) return;
-      queryClient.prefetchQuery({
-        queryKey: ["restaurants", listId],
-        queryFn: async () => {
-          const { restaurants: data } = await getRestaurants({
-            data: { listId },
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          return (data ?? []) as Restaurant[];
-        },
-      });
-    },
-    [queryClient, activeListId]
-  );
-
-  // Refs to keep callbacks stable across re-renders.
-  // Updated synchronously during render so callbacks always read the latest
-  // values without needing dedicated effects (which would schedule extra work).
-  const restaurantsRef = useRef(restaurants);
-  const tokenRef = useRef(accessToken);
-  restaurantsRef.current = restaurants;
-  tokenRef.current = accessToken;
 
   useEffect(() => {
     if (!accessToken) return;
@@ -263,10 +198,6 @@ function Index() {
   const totalCount = restaurants.length;
   const visitedCount = useMemo(() => restaurants.filter((r) => r.visited).length, [restaurants]);
   const toVisitCount = totalCount - visitedCount;
-  const cuisines = useMemo(() => {
-    const set = new Set(restaurants.map((r) => r.cuisine));
-    return Array.from(set).sort();
-  }, [restaurants]);
 
   // Auto-select the first list as soon as lists arrive (if none picked yet).
   useEffect(() => {
@@ -274,24 +205,20 @@ function Index() {
     if (lists.length > 0) {
       setActiveListId(lists[0].id);
     }
-  }, [lists, activeListId]);
+  }, [lists, activeListId, setActiveListId]);
 
   // First-time user with zero lists: create a default list + seed restaurants.
-  // Guarded by a ref so we never trigger the create twice for the same session.
   const defaultListBootstrappedRef = useRef(false);
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
-    if (listsQuery.isLoading || listsQuery.isFetching) return;
-    if (!listsQuery.isSuccess) return;
+    if (listsLoading || listsFetching) return;
+    if (!listsSuccess) return;
     if (lists.length > 0) return;
     if (defaultListBootstrappedRef.current) return;
     defaultListBootstrappedRef.current = true;
     (async () => {
       try {
-        const { list } = await createList({
-          data: { name: "Minha Lista" },
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        const list = await createListAction("Minha Lista");
         setLists([{ id: list.id, name: list.name, created_by: list.created_by }]);
         setActiveListId(list.id);
         await seedDefaultRestaurants({
@@ -304,62 +231,7 @@ function Index() {
         defaultListBootstrappedRef.current = false;
       }
     })();
-  }, [isAuthenticated, accessToken, listsQuery.isLoading, listsQuery.isFetching, listsQuery.isSuccess, lists.length, setLists, queryClient, listsQueryKey]);
-
-  // Restaurants are fetched declaratively by useQuery (queryKey: ['restaurants', activeListId])
-  // so switching lists and coming back is instant from cache.
-
-  const deferredSearch = useDeferredValue(search);
-
-  // Tags available across the user's restaurants — feeds the advanced filter sheet
-  const availableTags = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of restaurants) {
-      if (Array.isArray(r.tags)) {
-        for (const t of r.tags) if (t) set.add(t);
-      }
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [restaurants]);
-
-  // Neighborhoods (location field) available across the user's restaurants
-  const availableNeighborhoods = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of restaurants) {
-      const loc = (r.location ?? "").trim();
-      if (loc) set.add(loc);
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [restaurants]);
-
-  const advancedActiveCount = useMemo(() => countActiveFilters(advancedFilters), [advancedFilters]);
-
-  const filtered = useMemo(() => {
-    const q = deferredSearch.toLowerCase();
-    const adv = advancedFilters;
-    // Advanced status overrides the basic chip status when set
-    const effectiveStatus = adv.status !== "all" ? adv.status : statusFilter;
-    return restaurants
-      .filter((r) => {
-        if (q && !r.name.toLowerCase().includes(q)) return false;
-        if (effectiveStatus === "visited" && !r.visited) return false;
-        if (effectiveStatus === "to-visit" && r.visited) return false;
-        if (cuisineFilter.length > 0 && !cuisineFilter.includes(r.cuisine)) return false;
-
-        // Advanced filters
-        if (adv.neighborhoods.length > 0 && !adv.neighborhoods.includes(r.location)) return false;
-        if (adv.occasions.length > 0 && (!r.occasion || !adv.occasions.includes(r.occasion))) return false;
-        if (adv.cuisines.length > 0 && !adv.cuisines.includes(r.cuisine)) return false;
-        if (adv.minRating > 0 && (r.rating ?? 0) < adv.minRating) return false;
-        if (adv.tags.length > 0) {
-          const rt = r.tags ?? [];
-          const hasAll = adv.tags.every((t) => rt.includes(t));
-          if (!hasAll) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
-  }, [restaurants, deferredSearch, statusFilter, cuisineFilter, advancedFilters]);
+  }, [isAuthenticated, accessToken, listsLoading, listsFetching, listsSuccess, lists.length, setLists, setActiveListId, queryClient, listsQueryKey, createListAction]);
 
   // Pagination: render only first N items, load more on scroll
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -389,49 +261,20 @@ function Index() {
     return () => io.disconnect();
   }, [hasMore, filtered.length]);
 
-  const handleToggleVisited = useCallback(async (id: string) => {
-    const r = restaurantsRef.current.find((r) => r.id === id);
-    const token = tokenRef.current;
-    if (!r || !token) return;
-    setRestaurants((prev) => prev.map((x) => (x.id === id ? { ...x, visited: !x.visited } : x)));
-    try {
-      await updateRestaurant({
-        data: { id, visited: !r.visited },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch {
-      setRestaurants((prev) => prev.map((x) => (x.id === id ? { ...x, visited: r.visited } : x)));
-    }
-  }, []);
+  const handleToggleVisited = useCallback((id: string) => toggleVisited(id), [toggleVisited]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    const token = tokenRef.current;
-    if (!token) return;
-    const prev = restaurantsRef.current;
-    setRestaurants((p) => p.filter((r) => r.id !== id));
-    try {
-      await deleteRestaurant({
-        data: { id },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      refreshPlan();
-    } catch {
-      setRestaurants(prev);
-    }
-  }, [refreshPlan]);
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const ok = await deleteRestaurantAction(id);
+      if (ok) refreshPlan();
+    },
+    [deleteRestaurantAction, refreshPlan]
+  );
 
-  const handleRate = useCallback(async (id: string, rating: number) => {
-    const token = tokenRef.current;
-    if (!token) return;
-    setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, rating } : r)));
-    try {
-      await updateRestaurant({
-        data: { id, rating },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch {}
-  }, []);
-
+  const handleRate = useCallback(
+    (id: string, rating: number) => updateRestaurantAction(id, { rating }),
+    [updateRestaurantAction]
+  );
 
   const handleExportPdf = useCallback(async (opts: ExportPdfOptionsValue) => {
     const token = tokenRef.current;
@@ -482,7 +325,7 @@ function Index() {
       console.error("[exportPdf] failed:", err);
       toast.error("Não foi possível gerar o PDF.");
     }
-  }, [activeListId, lists]);
+  }, [activeListId, lists, restaurantsRef, tokenRef]);
 
   const handleAdd = useCallback(async (data: {
     name: string;
@@ -493,36 +336,30 @@ function Index() {
     longitude?: number;
   }) => {
     if (!activeListId || !session) return;
-    // Client-side guard (server enforces too)
     if (plan === "free" && limits.restaurants !== null && usage.restaurants >= limits.restaurants) {
       openUpgrade({ reason: "restaurants" });
       return;
     }
     try {
-      await addRestaurant({
-        data: {
-          listId: activeListId,
-          name: data.name,
-          location: data.location,
-          cuisine: data.cuisine,
-          address: data.address,
-          latitude: data.latitude,
-          longitude: data.longitude,
-        },
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      await addRestaurantAction({
+        listId: activeListId,
+        name: data.name,
+        location: data.location,
+        cuisine: data.cuisine,
+        address: data.address,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
-      loadRestaurants();
       refreshPlan();
     } catch (err: any) {
       console.error("Error adding restaurant:", err);
-      // Server-side limit hit (race condition) — show modal
       if (typeof err?.message === "string" && err.message.toLowerCase().includes("limite")) {
         openUpgrade({ reason: "restaurants" });
       } else {
         window.alert(err?.message ?? "Erro ao adicionar restaurante.");
       }
     }
-  }, [activeListId, session, plan, limits.restaurants, usage.restaurants, refreshPlan, openUpgrade]);
+  }, [activeListId, session, plan, limits.restaurants, usage.restaurants, refreshPlan, openUpgrade, addRestaurantAction]);
 
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeMsg, setGeocodeMsg] = useState<string | null>(null);
@@ -570,11 +407,7 @@ function Index() {
       setGeocoding(false);
       setTimeout(() => setGeocodeMsg(null), 6000);
     }
-  }, [activeListId, session, geocoding, restaurants]);
-
-  const handleGeocodeAll = useCallback(async () => {
-    await runGeocode(true);
-  }, [runGeocode]);
+  }, [activeListId, session, geocoding, restaurants, loadRestaurants]);
 
   useEffect(() => {
     if (!activeListId || !session || geocoding || restaurants.length === 0) return;
@@ -605,10 +438,7 @@ function Index() {
       return;
     }
     try {
-      const { list } = await createList({
-        data: { name: newListName.trim() },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const list = await createListAction(newListName.trim());
       setLists((prev) => [{ id: list.id, name: list.name, created_by: list.created_by }, ...prev]);
       setActiveListId(list.id);
       autoGeocodeStartedRef.current = null;
@@ -639,10 +469,7 @@ function Index() {
       if (!next) setRestaurants([]);
     }
     try {
-      await deleteList({
-        data: { listId },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await deleteListAction(listId);
     } catch (err) {
       console.error("Error deleting list:", err);
       setLists(prevLists);
