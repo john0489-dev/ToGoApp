@@ -57,24 +57,6 @@ export const Route = createFileRoute("/")({
 });
 
 type Tab = "list" | "location" | "nearme";
-type StatusFilter = "all" | "visited" | "to-visit";
-type Restaurant = {
-  id: string;
-  name: string;
-  location: string;
-  cuisine: string;
-  visited: boolean;
-  rating: number;
-  list_id: string;
-  added_by: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  address?: string | null;
-  price_range?: string | null;
-  occasion?: string | null;
-  tags?: string[] | null;
-  photos?: string[] | null;
-};
 type ListItem = {
   id: string;
   name: string;
