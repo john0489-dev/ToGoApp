@@ -997,6 +997,16 @@ function Index() {
           }))}
         />
       </Suspense>
+      {detailsRestaurant && (
+        <RestaurantDetailsDialog
+          restaurant={detailsRestaurant}
+          open={!!detailsRestaurantId}
+          onOpenChange={(o) => { if (!o) setDetailsRestaurantId(null); }}
+          onToggleVisited={handleToggleVisited}
+          onDelete={(id) => { handleDelete(id); setDetailsRestaurantId(null); }}
+          onRate={handleRate}
+        />
+      )}
     </div>
   );
 }
