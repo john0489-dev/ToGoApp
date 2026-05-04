@@ -170,8 +170,8 @@ function Index() {
 
   // Listen for "open restaurant" events from the map InfoWindow
   useEffect(() => {
-    const handler = (e: Event) => {
-      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+    const handler = (e: CustomEvent<{ id: string }>) => {
+      const id = e.detail?.id;
       setTab("list");
       if (id) {
         setTimeout(() => {
@@ -184,8 +184,8 @@ function Index() {
         }, 100);
       }
     };
-    window.addEventListener("togo:open-restaurant", handler);
-    return () => window.removeEventListener("togo:open-restaurant", handler);
+    window.addEventListener("togo:open-restaurant", handler as EventListener);
+    return () => window.removeEventListener("togo:open-restaurant", handler as EventListener);
   }, []);
 
   useEffect(() => {
