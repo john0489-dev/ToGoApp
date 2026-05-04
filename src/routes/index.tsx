@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
+import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
 import { InviteDialog } from "@/components/InviteDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -174,25 +175,20 @@ function Index() {
     }
   }, []);
 
-  // Listen for "open restaurant" events from the map InfoWindow
+  // Open restaurant details (used by map InfoWindow "Ver detalhes")
+  const [detailsRestaurantId, setDetailsRestaurantId] = useState<string | null>(null);
   useEffect(() => {
     const handler = (e: CustomEvent<{ id: string }>) => {
       const id = e.detail?.id;
-      setTab("list");
-      if (id) {
-        setTimeout(() => {
-          const el = document.querySelector(`[data-restaurant-id="${id}"]`);
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            el.classList.add("ring-2", "ring-[#c4844a]");
-            setTimeout(() => el.classList.remove("ring-2", "ring-[#c4844a]"), 1800);
-          }
-        }, 100);
-      }
+      if (id) setDetailsRestaurantId(id);
     };
     window.addEventListener("togo:open-restaurant", handler);
     return () => window.removeEventListener("togo:open-restaurant", handler);
   }, []);
+  const detailsRestaurant = useMemo(
+    () => restaurants.find((r) => r.id === detailsRestaurantId) ?? null,
+    [restaurants, detailsRestaurantId]
+  );
 
   useEffect(() => {
     if (!accessToken) return;
@@ -1002,6 +998,16 @@ function Index() {
           }))}
         />
       </Suspense>
+      {detailsRestaurant && (
+        <RestaurantDetailsDialog
+          restaurant={detailsRestaurant}
+          open={!!detailsRestaurantId}
+          onOpenChange={(o: boolean) => { if (!o) setDetailsRestaurantId(null); }}
+          onToggleVisited={handleToggleVisited}
+          onDelete={(id: string) => { handleDelete(id); setDetailsRestaurantId(null); }}
+          onRate={handleRate}
+        />
+      )}
     </div>
   );
 }
