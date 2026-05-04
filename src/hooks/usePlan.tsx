@@ -97,7 +97,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PlanContext.Provider value={{ ...state, refresh: load, hasFeature }}>
+    <PlanContext.Provider value={{ ...state, refresh: () => load(true), hasFeature }}>
       {children}
     </PlanContext.Provider>
   );
