@@ -24,6 +24,9 @@ const defaultState: PlanState = {
   hasFeature: () => false,
 };
 
+const PLAN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let planCache: { token: string; at: number; data: Omit<PlanState, "refresh" | "hasFeature"> } | null = null;
+
 const PlanContext = createContext<PlanState>(defaultState);
 
 export function PlanProvider({ children }: { children: ReactNode }) {
