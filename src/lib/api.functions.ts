@@ -118,7 +118,7 @@ async function countUserRestaurants(supabase: DB, userId: string): Promise<numbe
   return count ?? 0;
 }
 
-async function countUserOwnedLists(supabase: any, userId: string): Promise<number> {
+async function countUserOwnedLists(supabase: DB, userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("lists")
     .select("*", { count: "exact", head: true })
