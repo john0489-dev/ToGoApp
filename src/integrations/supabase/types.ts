@@ -305,6 +305,7 @@ export type Database = {
           created_at: string
           cuisine: string
           dish_favorite: string | null
+          hours_updated_at: string | null
           id: string
           latitude: number | null
           list_id: string
@@ -313,8 +314,10 @@ export type Database = {
           name: string
           notes: string | null
           occasion: string | null
+          opening_hours: Json | null
           photo_url: string | null
           photos: string[]
+          place_id: string | null
           price_range: string | null
           rating: number
           tags: string[]
@@ -328,6 +331,7 @@ export type Database = {
           created_at?: string
           cuisine?: string
           dish_favorite?: string | null
+          hours_updated_at?: string | null
           id?: string
           latitude?: number | null
           list_id: string
@@ -336,8 +340,10 @@ export type Database = {
           name: string
           notes?: string | null
           occasion?: string | null
+          opening_hours?: Json | null
           photo_url?: string | null
           photos?: string[]
+          place_id?: string | null
           price_range?: string | null
           rating?: number
           tags?: string[]
@@ -351,6 +357,7 @@ export type Database = {
           created_at?: string
           cuisine?: string
           dish_favorite?: string | null
+          hours_updated_at?: string | null
           id?: string
           latitude?: number | null
           list_id?: string
@@ -359,8 +366,10 @@ export type Database = {
           name?: string
           notes?: string | null
           occasion?: string | null
+          opening_hours?: Json | null
           photo_url?: string | null
           photos?: string[]
+          place_id?: string | null
           price_range?: string | null
           rating?: number
           tags?: string[]
