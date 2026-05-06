@@ -1,9 +1,12 @@
+import { useTranslation } from "react-i18next";
+
 type Props = {
   onInstall: () => void;
   onDismiss: () => void;
 };
 
 export function PWAInstallBanner({ onInstall, onDismiss }: Props) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -35,7 +38,7 @@ export function PWAInstallBanner({ onInstall, onDismiss }: Props) {
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
-            Instale o app no celular
+            {t("install_app")}
           </div>
           <div
             style={{
@@ -45,7 +48,7 @@ export function PWAInstallBanner({ onInstall, onDismiss }: Props) {
               lineHeight: 1.3,
             }}
           >
-            Acesse mais rápido, sem precisar do navegador
+            {t("install_subtitle")}
           </div>
         </div>
       </div>
@@ -62,7 +65,7 @@ export function PWAInstallBanner({ onInstall, onDismiss }: Props) {
             fontWeight: 600,
           }}
         >
-          📲 Ver como instalar
+          📲 {t("install_cta")}
         </button>
         <button
           onClick={onDismiss}
@@ -76,7 +79,7 @@ export function PWAInstallBanner({ onInstall, onDismiss }: Props) {
             fontWeight: 500,
           }}
         >
-          Agora não
+          {t("install_later")}
         </button>
       </div>
     </div>
