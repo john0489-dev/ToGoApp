@@ -1018,6 +1018,7 @@ function Index() {
           onToggleVisited={handleToggleVisited}
           onDelete={(id: string) => { handleDelete(id); setDetailsRestaurantId(null); }}
           onRate={handleRate}
+          onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
         />
       )}
       <InstallGuideDialog open={installGuideOpen} onOpenChange={setInstallGuideOpen} />
