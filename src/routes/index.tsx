@@ -926,6 +926,7 @@ function Index() {
                       onDelete={handleDelete}
                       onRate={handleRate}
                       onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
+                      openNow={openNowEnabled ? openNowStatuses[r.id] ?? null : null}
                     />
                   ))}
                   {hasMore && (
