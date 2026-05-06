@@ -946,7 +946,7 @@ function Index() {
                       onDelete={handleDelete}
                       onRate={handleRate}
                       onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
-                      isOpen={advancedFilters.openNow ? isOpenNow(r.opening_hours ?? null) : null}
+                      isOpen={isOpenNow(r.opening_hours ?? null)}
                     />
                   ))}
                   {hasMore && (
