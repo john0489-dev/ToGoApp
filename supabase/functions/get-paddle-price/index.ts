@@ -1,3 +1,4 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { gatewayFetch, type PaddleEnv } from '../_shared/paddle.ts';
 
 const corsHeaders = {
@@ -12,6 +13,27 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Require authenticated user — prevents anonymous abuse of Paddle API quota.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: corsHeaders,
+      });
+    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userRes, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !userRes?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: corsHeaders,
+      });
+    }
+
     const { priceId, environment } = await req.json();
     if (!priceId) {
       return new Response(JSON.stringify({ error: 'priceId required' }), {
