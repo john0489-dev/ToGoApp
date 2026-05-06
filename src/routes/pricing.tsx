@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, Loader2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/usePlan";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,29 +28,30 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
 });
 
-const FREE_FEATURES = [
-  "Até 20 restaurantes",
-  "3 listas",
-  "Avaliação por estrelas",
-  "Compartilhar lista",
-];
 
-const PRO_FEATURES = [
-  "Restaurantes ilimitados",
-  "Listas ilimitadas",
-  "Fotos e notas detalhadas",
-  "Filtros avançados",
-  "Histórico de visitas",
-  "Listas colaborativas",
-  "Exportar em PDF",
-];
 
 function PricingPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { plan, refresh } = usePlan();
   const { user, session } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
   const isPro = plan === "pro";
+
+  const FREE_FEATURES = [
+    t("free_restaurants"),
+    t("free_lists"),
+    t("free_rating"),
+    t("free_share"),
+  ];
+  const PRO_FEATURES = [
+    t("pro_unlimited_restaurants"),
+    t("pro_unlimited_lists"),
+    t("pro_advanced_filters"),
+    t("pro_history"),
+    t("pro_collaborative"),
+    t("pro_pdf"),
+  ];
 
   const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
   const [portalLoading, setPortalLoading] = useState(false);
@@ -133,7 +135,7 @@ function PricingPage() {
               Escolha seu plano
             </h1>
             <p style={{ marginTop: 10, fontSize: 14, color: "#aaa", maxWidth: 280 }}>
-              Comece grátis. Faça upgrade quando quiser desbloquear todos os recursos.
+              {t("pricing_subtitle")}
             </p>
 
             <div
@@ -177,7 +179,7 @@ function PricingPage() {
                   color: billing === "yearly" ? "#fff" : "#888",
                 }}
               >
-                Anual
+                {t("annual")}
                 <span
                   style={{
                     background: "#f5efe0",
@@ -230,7 +232,7 @@ function PricingPage() {
           </div>
           <p style={{ marginTop: 10, color: "#1a1a18" }}>
             <span style={{ fontSize: 32, fontWeight: 500 }}>R$ 0</span>
-            <span style={{ marginLeft: 8, fontSize: 13, color: "#aaa" }}>grátis para sempre</span>
+            <span style={{ marginLeft: 8, fontSize: 13, color: "#aaa" }}>{t("free_forever")}</span>
           </p>
 
           <ul className="mt-5 space-y-2.5">
@@ -298,17 +300,17 @@ function PricingPage() {
           {billing === "monthly" ? (
             <p style={{ marginTop: 10, color: "#fff" }}>
               <span style={{ fontSize: 32, fontWeight: 500 }}>R$ 14,90</span>
-              <span style={{ marginLeft: 8, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>/mês</span>
+              <span style={{ marginLeft: 8, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>/{t("per_month")}</span>
             </p>
           ) : (
             <>
               <p style={{ marginTop: 10, color: "#fff" }}>
                 <span style={{ fontSize: 32, fontWeight: 500 }}>R$ 99</span>
-                <span style={{ marginLeft: 8, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>/ano</span>
+                <span style={{ marginLeft: 8, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>/{t("per_year")}</span>
               </p>
               <p style={{ marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
                 ≈ R$ {yearlyMonthly}/mês ·{" "}
-                <span style={{ color: "#d4a855", fontWeight: 600 }}>economize 45%</span>
+                <span style={{ color: "#d4a855", fontWeight: 600 }}>{t("save_year")}</span>
               </p>
             </>
           )}
@@ -375,9 +377,9 @@ function PricingPage() {
                     Abrindo checkout…
                   </>
                 ) : billing === "monthly" ? (
-                  "Assinar Pro — R$ 14,90/mês"
+                  `${t("subscribe_pro")} — R$ 14,90/${t("per_month")}`
                 ) : (
-                  "Assinar Pro — R$ 99/ano"
+                  `${t("subscribe_pro")} — R$ 99/${t("per_year")}`
                 )}
               </button>
             )}
