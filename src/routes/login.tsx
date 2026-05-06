@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { AppLogo } from "@/components/AppLogo";
 
 export const Route = createFileRoute("/login")({
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -178,7 +180,7 @@ function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder={t("email")}
             required
             autoComplete="email"
             className="login-field"
@@ -188,7 +190,7 @@ function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Senha"
+            placeholder={t("password")}
             required
             minLength={6}
             autoComplete={isSignUp ? "new-password" : "current-password"}
@@ -213,7 +215,7 @@ function LoginPage() {
               transition: "opacity 0.15s ease, transform 0.05s ease",
             }}
           >
-            {loading ? "Carregando..." : isSignUp ? "Criar conta" : "Entrar"}
+            {loading ? "..." : isSignUp ? t("create_account") : t("sign_in")}
           </button>
         </form>
 
@@ -225,7 +227,7 @@ function LoginPage() {
             color: "#aaa",
           }}
         >
-          {isSignUp ? "Já tem conta?" : "Não tem conta?"}{" "}
+          {isSignUp ? t("already_have_account", { defaultValue: "Já tem conta?" }) : t("no_account")}{" "}
           <button
             type="button"
             onClick={() => {
@@ -243,7 +245,7 @@ function LoginPage() {
               cursor: "pointer",
             }}
           >
-            {isSignUp ? "Entrar" : "Criar conta"}
+            {isSignUp ? t("sign_in") : t("create_account")}
           </button>
         </p>
 

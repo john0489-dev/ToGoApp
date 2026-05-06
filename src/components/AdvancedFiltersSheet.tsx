@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 export type StatusFilter = "all" | "visited" | "to-visit";
@@ -33,10 +34,10 @@ export function countActiveFilters(f: AdvancedFilters): number {
 }
 
 const OCCASION_OPTIONS = ["Casual", "Romântico", "Reunião", "Família", "Happy Hour", "Aniversário"];
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "Todos" },
-  { value: "to-visit", label: "Para Visitar" },
-  { value: "visited", label: "Visitado" },
+const STATUS_OPTIONS: { value: StatusFilter; labelKey: string }[] = [
+  { value: "all", labelKey: "filter_all" },
+  { value: "to-visit", labelKey: "filter_to_visit" },
+  { value: "visited", labelKey: "filter_visited" },
 ];
 const RATING_OPTIONS = [0, 4, 5, 6, 7, 8, 9];
 
@@ -62,6 +63,7 @@ export function AdvancedFiltersSheet({
   availableTags,
   availableNeighborhoods,
 }: Props) {
+  const { t } = useTranslation();
   // Lock body scroll while open
   useEffect(() => {
     if (!open) return;
@@ -102,7 +104,7 @@ export function AdvancedFiltersSheet({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-gray-100">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Filtros avançados</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t("advanced_filters")}</h2>
             {activeCount > 0 && (
               <p className="text-xs text-gray-500 mt-0.5">{activeCount} filtro{activeCount > 1 ? "s" : ""} ativo{activeCount > 1 ? "s" : ""}</p>
             )}
@@ -119,7 +121,7 @@ export function AdvancedFiltersSheet({
         {/* Body — scrollable */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
           {/* Status */}
-          <Section title="Status">
+          <Section title={t("status_label", { defaultValue: "Status" })}>
             <div className="flex gap-2">
               {STATUS_OPTIONS.map((opt) => {
                 const active = value.status === opt.value;
@@ -134,7 +136,7 @@ export function AdvancedFiltersSheet({
                         : "bg-gray-100 text-gray-700 active:bg-gray-200"
                     }`}
                   >
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </button>
                 );
               })}
@@ -143,7 +145,7 @@ export function AdvancedFiltersSheet({
 
           {/* Bairro */}
           {availableNeighborhoods.length > 0 && (
-            <Section title="Bairro">
+            <Section title={t("neighborhood", { defaultValue: "Bairro" })}>
               <div className="flex flex-wrap gap-2">
                 {availableNeighborhoods.map((n) => (
                   <Chip
@@ -158,7 +160,7 @@ export function AdvancedFiltersSheet({
           )}
 
           {/* Ocasião */}
-          <Section title="Ocasião">
+          <Section title={t("occasion", { defaultValue: "Ocasião" })}>
             <div className="flex flex-wrap gap-2">
               {OCCASION_OPTIONS.map((o) => (
                 <Chip
@@ -172,7 +174,7 @@ export function AdvancedFiltersSheet({
           </Section>
 
           {/* Avaliação */}
-          <Section title="Avaliação mínima">
+          <Section title={t("min_rating", { defaultValue: "Avaliação mínima" })}>
             <div className="flex flex-wrap gap-2">
               {RATING_OPTIONS.map((n) => {
                 const active = value.minRating === n;
@@ -188,7 +190,7 @@ export function AdvancedFiltersSheet({
                     }`}
                     style={{ fontSize: "13px", fontWeight: 500 }}
                   >
-                    {n === 0 ? "Qualquer" : `${n}+`}
+                    {n === 0 ? t("any", { defaultValue: "Qualquer" }) : `${n}+`}
                   </button>
                 );
               })}
@@ -197,7 +199,7 @@ export function AdvancedFiltersSheet({
 
           {/* Culinária */}
           {availableCuisines.length > 0 && (
-            <Section title="Culinária">
+            <Section title={t("cuisine")}>
               <div className="flex flex-wrap gap-2">
                 {availableCuisines.map((c) => (
                   <Chip
@@ -213,7 +215,7 @@ export function AdvancedFiltersSheet({
 
           {/* Tags */}
           {availableTags.length > 0 && (
-            <Section title="Tags">
+            <Section title={t("tags")}>
               <div className="flex flex-wrap gap-2">
                 {availableTags.map((t) => (
                   <Chip
@@ -236,7 +238,7 @@ export function AdvancedFiltersSheet({
             disabled={activeCount === 0}
             className="flex-1 h-12 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-40"
           >
-            Limpar filtros
+            {t("clear_filters", { defaultValue: "Limpar filtros" })}
           </button>
           <button
             type="button"
@@ -244,7 +246,7 @@ export function AdvancedFiltersSheet({
             className="flex-[1.4] h-12 rounded-xl text-sm font-semibold text-white transition-transform active:scale-[0.98]"
             style={{ background: "#c4844a" }}
           >
-            Aplicar{activeCount > 0 ? ` (${activeCount})` : ""}
+            {t("apply", { defaultValue: "Aplicar" })}{activeCount > 0 ? ` (${activeCount})` : ""}
           </button>
         </div>
       </div>
