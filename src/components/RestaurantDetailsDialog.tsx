@@ -220,7 +220,41 @@ export function RestaurantDetailsDialog({
             )}
           </div>
 
-          {/* Location */}
+          {/* Prato favorito */}
+          <div
+            className="rounded-2xl p-4"
+            style={{ background: "#fff", border: "1px solid #ede9e3" }}
+          >
+            <p
+              className="text-[11px] font-semibold uppercase tracking-wider"
+              style={{ color: "#888" }}
+            >
+              Prato favorito
+            </p>
+            <div
+              className="mt-2 flex items-center gap-2 rounded-xl px-3"
+              style={{ background: "#faf9f7", border: "1px solid #ede9e3" }}
+            >
+              <span style={{ fontSize: 16 }}>🍽️</span>
+              <input
+                type="text"
+                value={dishFavorite}
+                maxLength={100}
+                placeholder="Ex: Risoto de funghi, Temaki salmão..."
+                onChange={(e) => setDishFavorite(e.target.value)}
+                onBlur={() => {
+                  const next = dishFavorite.trim();
+                  const prev = (restaurant.dish_favorite ?? "").trim();
+                  if (next !== prev) {
+                    onSaveDishFavorite?.(restaurant.id, next);
+                  }
+                }}
+                className="flex-1 bg-transparent py-2.5 text-sm focus:outline-none"
+                style={{ color: "#1a1a18" }}
+              />
+            </div>
+          </div>
+
           <div className="flex items-start gap-3">
             <MapPin size={18} className="mt-0.5 shrink-0" style={{ color: "#c4844a" }} />
             <div className="min-w-0 flex-1">
