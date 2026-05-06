@@ -4,21 +4,13 @@ import pt from "./locales/pt.json";
 import en from "./locales/en.json";
 import es from "./locales/es.json";
 
-const getSavedLang = (): string => {
+const getDefaultLang = (): string => {
   if (typeof window === "undefined") return "pt";
   try {
-    return localStorage.getItem("togo_lang") || detectBrowserLang();
+    return localStorage.getItem("togo_lang") || "pt";
   } catch {
     return "pt";
   }
-};
-
-const detectBrowserLang = (): string => {
-  if (typeof navigator === "undefined") return "pt";
-  const lang = navigator.language || "";
-  if (lang.startsWith("es")) return "es";
-  if (lang.startsWith("en")) return "en";
-  return "pt";
 };
 
 i18n.use(initReactI18next).init({
@@ -27,8 +19,12 @@ i18n.use(initReactI18next).init({
     en: { translation: en },
     es: { translation: es },
   },
-  lng: getSavedLang(),
+  lng: getDefaultLang(),
   fallbackLng: "pt",
+  initImmediate: false,
+  react: {
+    useSuspense: false,
+  },
   interpolation: {
     escapeValue: false,
   },
