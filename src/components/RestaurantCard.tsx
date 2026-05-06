@@ -7,6 +7,7 @@ interface RestaurantCardProps {
   onToggleVisited: (id: string) => void;
   onDelete: (id: string) => void;
   onRate: (id: string, rating: number) => void;
+  onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
 }
 
 function RestaurantCardImpl({
@@ -14,6 +15,7 @@ function RestaurantCardImpl({
   onToggleVisited,
   onDelete,
   onRate,
+  onSaveDishFavorite,
 }: RestaurantCardProps) {
   const [open, setOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation();
