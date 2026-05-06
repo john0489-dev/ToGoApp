@@ -74,6 +74,15 @@ function RestaurantCardImpl({
               {restaurant.visited ? "Visitado" : "Para Visitar"}
             </span>
           </div>
+
+          {restaurant.dish_favorite && (
+            <p
+              className="mt-2 truncate italic"
+              style={{ fontSize: 12, color: "#aaa" }}
+            >
+              🍽️ {restaurant.dish_favorite}
+            </p>
+          )}
         </div>
 
         <div className="mt-3 flex items-center justify-between" onClick={stop}>
