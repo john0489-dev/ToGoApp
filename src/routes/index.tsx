@@ -972,7 +972,7 @@ function Index() {
         {/* Near-me tab — mounted on first visit, kept alive after */}
         {mountedTabs.nearme && (
           <div className={tab === "nearme" ? "px-4 py-3 pb-20" : "hidden"}>
-            <Suspense fallback={<div className="flex items-center justify-center py-20 text-sm text-muted-foreground">Carregando...</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center py-20 text-sm text-muted-foreground">{t("loading", { defaultValue: "Carregando..." })}</div>}>
               <LazyNearMeView restaurants={restaurants} onToggleVisited={handleToggleVisited} />
             </Suspense>
           </div>
