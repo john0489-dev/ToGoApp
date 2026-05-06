@@ -13,6 +13,19 @@ import { I18nextProvider } from "react-i18next";
 import appCss from "../styles.css?url";
 import i18n from "../lib/i18n";
 
+// Apply saved theme on boot
+if (typeof window !== "undefined") {
+  try {
+    const t = localStorage.getItem("togo_theme");
+    if (t === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (t === "system") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.classList.add("dark");
+    }
+  } catch {}
+}
+
 // build: force rebuild 2026-04-23
 
 function NotFoundComponent() {

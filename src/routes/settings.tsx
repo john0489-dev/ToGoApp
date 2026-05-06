@@ -190,8 +190,67 @@ function SettingsPage() {
     navigate({ to: "/login" });
   };
 
-  const handleFeedback = () => {
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Feedback To Go")}`;
+  const handleThemeChange = (t: "light" | "dark" | "system") => {
+    setTheme(t);
+    try { localStorage.setItem("togo_theme", t); } catch {}
+    const root = document.documentElement;
+    if (t === "dark") {
+      root.classList.add("dark");
+    } else if (t === "light") {
+      root.classList.remove("dark");
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      prefersDark ? root.classList.add("dark") : root.classList.remove("dark");
+    }
+  };
+
+  const handleNotifToggle = async () => {
+    if (notifEnabled) {
+      setNotifEnabled(false);
+      try { localStorage.setItem("togo_notifications", "false"); } catch {}
+      toast.success("Notificações desativadas");
+      return;
+    }
+    if (!("Notification" in window)) {
+      toast.error("Notificações não suportadas neste navegador");
+      return;
+    }
+    setNotifLoading(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        localStorage.setItem("togo_notifications", "true");
+        setNotifEnabled(true);
+        toast.success("Notificações ativadas! 🔔");
+      } else {
+        toast.error("Permissão negada. Ative nas configurações do navegador.");
+      }
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const handleFeedback = () => setFeedbackOpen(true);
+
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackMsg.trim()) return;
+    setFeedbackLoading(true);
+    try {
+      const { error } = await supabase.from("feedbacks").insert({
+        user_id: userId,
+        type: feedbackType,
+        message: feedbackMsg.trim(),
+      });
+      if (error) throw error;
+      toast.success("Obrigado pelo feedback! 🙏");
+      setFeedbackOpen(false);
+      setFeedbackMsg("");
+      setFeedbackType("suggestion");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao enviar feedback");
+    } finally {
+      setFeedbackLoading(false);
+    }
   };
 
   return (
@@ -419,9 +478,16 @@ function SettingsPage() {
             <span style={{ fontSize: 14, color: "#1a1a18" }} className="flex-1">
               {t("theme", { defaultValue: "Tema" })}
             </span>
-            <span style={{ fontSize: 13, color: "#888" }}>
-              {t("theme_light", { defaultValue: "Claro (padrão)" })}
-            </span>
+            <select
+              value={theme}
+              onChange={(e) => handleThemeChange(e.target.value as "light" | "dark" | "system")}
+              className="bg-transparent text-sm focus:outline-none"
+              style={{ color: "#888" }}
+            >
+              <option value="light">☀️ Claro</option>
+              <option value="dark">🌙 Escuro</option>
+              <option value="system">⚙️ Sistema</option>
+            </select>
           </Row>
           <Row last>
             <IconCircle bg="#f0e8ff" color="#7c5fb3">
@@ -430,7 +496,26 @@ function SettingsPage() {
             <span style={{ fontSize: 14, color: "#1a1a18" }} className="flex-1">
               {t("notifications", { defaultValue: "Notificações" })}
             </span>
-            <Toggle disabled />
+            <button
+              type="button"
+              onClick={handleNotifToggle}
+              disabled={notifLoading}
+              style={{
+                width: 38, height: 22, borderRadius: 999,
+                background: notifEnabled ? "#c4844a" : "#e3ddd3",
+                position: "relative", opacity: notifLoading ? 0.6 : 1,
+                transition: "background 0.15s ease", flexShrink: 0,
+              }}
+              aria-pressed={notifEnabled}
+            >
+              <span style={{
+                position: "absolute", top: 2,
+                left: notifEnabled ? 18 : 2,
+                width: 18, height: 18, borderRadius: "50%",
+                background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                transition: "left 0.15s ease",
+              }} />
+            </button>
           </Row>
         </Group>
 
@@ -523,6 +608,80 @@ function SettingsPage() {
       </main>
 
       <InstallGuideDialog open={installOpen} onOpenChange={setInstallOpen} />
+
+      {/* Feedback Bottom Sheet */}
+      {feedbackOpen && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          background: "rgba(0,0,0,0.4)", display: "flex",
+          alignItems: "flex-end",
+        }} onClick={() => setFeedbackOpen(false)}>
+          <div
+            style={{
+              background: "#fff", borderRadius: "24px 24px 0 0",
+              padding: "24px 20px 40px", width: "100%",
+              maxWidth: 480, margin: "0 auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: 36, height: 4, background: "#e5e5e5", borderRadius: 2, margin: "0 auto 20px" }} />
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 400, color: "#1a1a18", marginBottom: 16 }}>
+              Enviar feedback
+            </h3>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {([["bug", "🐛", "Bug"], ["suggestion", "💡", "Sugestão"], ["compliment", "❤️", "Elogio"]] as const).map(([type, emoji, label]) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setFeedbackType(type)}
+                  style={{
+                    flex: 1, padding: "8px 4px", borderRadius: 10, fontSize: 12, fontWeight: 500,
+                    background: feedbackType === type ? "#1a1a18" : "#f5f2ee",
+                    color: feedbackType === type ? "#fff" : "#888",
+                    border: feedbackType === type ? "none" : "1px solid #ede9e3",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {emoji} {label}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={feedbackMsg}
+              onChange={(e) => setFeedbackMsg(e.target.value)}
+              maxLength={500}
+              rows={5}
+              placeholder="Conte o que aconteceu ou o que poderia ser melhor..."
+              style={{
+                width: "100%", padding: "12px 14px", borderRadius: 12,
+                border: "1px solid #ede9e3", fontSize: 14, resize: "none",
+                fontFamily: "'DM Sans', sans-serif", color: "#1a1a18",
+                background: "#faf9f7", outline: "none",
+              }}
+            />
+            <div style={{ textAlign: "right", fontSize: 11, color: "#bbb", marginTop: 4, marginBottom: 16 }}>
+              {feedbackMsg.length}/500
+            </div>
+            <button
+              type="button"
+              onClick={handleFeedbackSubmit}
+              disabled={!feedbackMsg.trim() || feedbackLoading}
+              style={{
+                width: "100%", height: 52, borderRadius: 14, border: "none",
+                background: feedbackMsg.trim() && !feedbackLoading
+                  ? "linear-gradient(135deg, #d4a855 0%, #c4844a 100%)"
+                  : "#f0ede8",
+                color: feedbackMsg.trim() && !feedbackLoading ? "#fff" : "#bbb",
+                fontSize: 15, fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
+                cursor: feedbackMsg.trim() && !feedbackLoading ? "pointer" : "default",
+                transition: "all 0.15s",
+              }}
+            >
+              {feedbackLoading ? "Enviando..." : "Enviar feedback"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
