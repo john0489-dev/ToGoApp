@@ -784,7 +784,7 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
           .from("restaurants")
           .update({
             place_id: placeId,
-            opening_hours: periods ? ({ periods } as unknown as Record<string, unknown>) : null,
+            opening_hours: (periods ? { periods } : null) as never,
             hours_updated_at: new Date().toISOString(),
           })
           .eq("id", r.id);
