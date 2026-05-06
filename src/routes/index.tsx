@@ -1020,6 +1020,12 @@ function Index() {
           onRate={handleRate}
         />
       )}
+      <InstallGuideDialog open={installGuideOpen} onOpenChange={setInstallGuideOpen} />
+      <InstallSuccessDialog
+        open={showInstalled}
+        onOpenChange={(o) => { if (!o) dismissInstalled(); }}
+        onGoToList={dismissInstalled}
+      />
     </div>
   );
 }
