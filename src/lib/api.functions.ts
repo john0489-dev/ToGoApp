@@ -692,3 +692,122 @@ export const seedDefaultRestaurants = createServerFn({ method: "POST" })
     if (error) safeError("seedDefaultRestaurants", error);
     return { seeded: true };
   });
+
+// ============================================================================
+// Google Places: refresh opening hours (hybrid "Open now" filter)
+// ============================================================================
+//
+// Strategy:
+// - Stores `place_id`, `opening_hours` (Google "periods" array), and
+//   `hours_updated_at` per restaurant.
+// - This server function refreshes a batch (up to BATCH_SIZE) of restaurants
+//   whose hours are missing or older than STALE_DAYS days.
+// - Client computes "open now" locally using the cached periods.
+
+type GooglePlacesPeriod = {
+  open: { day: number; time: string }; // day 0..6 (Sun..Sat), time "HHMM"
+  close?: { day: number; time: string };
+};
+
+export const refreshOpeningHours = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ listId: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
+    const apiKey = process.env.GOOGLE_GEOCODING_KEY;
+    if (!apiKey) {
+      console.error("[refreshOpeningHours] GOOGLE_GEOCODING_KEY missing");
+      return { processed: 0, updated: 0, failed: 0, remaining: 0 };
+    }
+
+    const BATCH_SIZE = 8;
+    const STALE_DAYS = 7;
+    const staleCutoff = new Date(Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const { supabase } = context;
+
+    // Pick rows that have coordinates but no fresh hours
+    const { data: rows, error } = await supabase
+      .from("restaurants")
+      .select("id, name, location, latitude, longitude, place_id, hours_updated_at")
+      .eq("list_id", data.listId)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .or(`hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`)
+      .limit(BATCH_SIZE);
+
+    if (error) safeError("refreshOpeningHours:fetch", error);
+
+    const pending = rows ?? [];
+    let updated = 0;
+    let failed = 0;
+
+    for (const r of pending) {
+      try {
+        let placeId = r.place_id as string | null;
+
+        // 1. Find place_id via FindPlaceFromText (if not cached)
+        if (!placeId) {
+          const query = encodeURIComponent(`${r.name} ${r.location ?? ""}`.trim());
+          const findUrl =
+            `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
+            `?input=${query}&inputtype=textquery&fields=place_id` +
+            `&locationbias=point:${r.latitude},${r.longitude}&key=${apiKey}`;
+          const findRes = await fetch(findUrl);
+          const findJson = (await findRes.json()) as {
+            status: string;
+            candidates?: { place_id: string }[];
+          };
+          if (findJson.status !== "OK" || !findJson.candidates?.length) {
+            // Mark as updated so we don't retry every time
+            await supabase
+              .from("restaurants")
+              .update({ hours_updated_at: new Date().toISOString() })
+              .eq("id", r.id);
+            failed++;
+            continue;
+          }
+          placeId = findJson.candidates[0].place_id;
+        }
+
+        // 2. Fetch place details (opening_hours.periods)
+        const detUrl =
+          `https://maps.googleapis.com/maps/api/place/details/json` +
+          `?place_id=${placeId}&fields=opening_hours&key=${apiKey}`;
+        const detRes = await fetch(detUrl);
+        const detJson = (await detRes.json()) as {
+          status: string;
+          result?: { opening_hours?: { periods?: GooglePlacesPeriod[] } };
+        };
+
+        const periods = detJson.result?.opening_hours?.periods ?? null;
+
+        const { error: upErr } = await supabase
+          .from("restaurants")
+          .update({
+            place_id: placeId,
+            opening_hours: (periods ? { periods } : null) as never,
+            hours_updated_at: new Date().toISOString(),
+          })
+          .eq("id", r.id);
+
+        if (upErr) {
+          console.error("[refreshOpeningHours:update]", upErr);
+          failed++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error("[refreshOpeningHours]", err);
+        failed++;
+      }
+    }
+
+    const { count: remaining } = await supabase
+      .from("restaurants")
+      .select("*", { count: "exact", head: true })
+      .eq("list_id", data.listId)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .or(`hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`);
+
+    return { processed: pending.length, updated, failed, remaining: remaining ?? 0 };
+  });

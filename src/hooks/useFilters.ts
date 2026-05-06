@@ -5,6 +5,7 @@ import {
   type AdvancedFilters,
 } from "@/components/AdvancedFiltersSheet";
 import type { Restaurant } from "@/hooks/useRestaurants";
+import { isOpenNow } from "@/lib/openingHours";
 
 export type StatusFilter = "all" | "visited" | "to-visit";
 
@@ -64,6 +65,10 @@ export function useFilters(restaurants: Restaurant[]) {
           const rt = r.tags ?? [];
           const hasAll = adv.tags.every((t) => rt.includes(t));
           if (!hasAll) return false;
+        }
+        if (adv.openNow) {
+          const open = isOpenNow(r.opening_hours ?? null);
+          if (open !== true) return false;
         }
         return true;
       })
