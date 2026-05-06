@@ -149,5 +149,7 @@
   "terms_short": "Términos de Uso",
   "theme": "Tema",
   "theme_light": "Claro (predeterminado)",
-  "yes": "Sí"
+  "yes": "Sí",
+  "cuisine_all": "Todas",
+  "cuisine_selected": "seleccionadas"
 }

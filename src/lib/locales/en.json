@@ -149,5 +149,7 @@
   "terms_short": "Terms of Use",
   "theme": "Theme",
   "theme_light": "Light (default)",
-  "yes": "Yes"
+  "yes": "Yes",
+  "cuisine_all": "All",
+  "cuisine_selected": "selected"
 }
