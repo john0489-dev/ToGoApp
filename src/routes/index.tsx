@@ -693,7 +693,7 @@ function Index() {
                 color: "#1a1a18",
               }}
             >
-              <span className="truncate">{activeList?.name || "Selecionar lista"}</span>
+              <span className="truncate">{activeList?.name || t("select_list")}</span>
               <ChevronDown size={16} className="shrink-0 ml-2" style={{ color: "#888" }} />
             </button>
             {listDropdown && (
@@ -772,19 +772,19 @@ function Index() {
           >
             <div className="text-center">
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                Total
+                {t("total")}
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{totalCount}</p>
             </div>
             <div className="text-center" style={{ borderLeft: "1px solid #ede9e3", borderRight: "1px solid #ede9e3" }}>
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                Visitados
+                {t("visited")}
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{visitedCount}</p>
             </div>
             <div className="text-center">
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                Para visitar
+                {t("to_visit")}
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{toVisitCount}</p>
             </div>
@@ -809,7 +809,7 @@ function Index() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar restaurante..."
+                placeholder={t("search_placeholder")}
                 className="w-full rounded-lg border border-input bg-card pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
@@ -820,9 +820,9 @@ function Index() {
                 onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                 className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="all">Todos</option>
-                <option value="visited">Visitados</option>
-                <option value="to-visit">Para Visitar</option>
+                <option value="all">{t("filter_all")}</option>
+                <option value="visited">{t("filter_visited")}</option>
+                <option value="to-visit">{t("filter_to_visit")}</option>
               </select>
               <div ref={cuisineDropdownRef} className="flex-1 relative">
                 <button
@@ -885,7 +885,7 @@ function Index() {
                     className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
                   >
                     <SlidersHorizontal size={12} />
-                    <span>Filtros avançados</span>
+                    <span>{t("advanced_filters")}</span>
                     {advancedActiveCount > 0 && (
                       <span
                         className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
@@ -901,7 +901,7 @@ function Index() {
                     className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
                   >
                     <FileDown size={12} />
-                    <span>Exportar PDF</span>
+                    <span>{t("export_pdf")}</span>
                   </button>
                 </>
               ) : (
@@ -936,7 +936,7 @@ function Index() {
                   })}
                 </div>
               ) : filtered.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Nenhum restaurante encontrado.</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">{t("no_restaurants")}</p>
               ) : (
                 <>
                   {visibleRestaurants.map((r) => (
