@@ -737,6 +737,12 @@ function Index() {
             </div>
           </div>
           )}
+          {showPwaBanner && (
+            <PWAInstallBanner
+              onInstall={() => setInstallGuideOpen(true)}
+              onDismiss={dismissPwaBanner}
+            />
+          )}
         </div>
       </header>
 
