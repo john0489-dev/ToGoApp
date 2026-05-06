@@ -11,6 +11,7 @@ export interface AdvancedFilters {
   status: StatusFilter;
   minRating: number; // 0 = any
   tags: string[];
+  openNow: boolean;
 }
 
 export const EMPTY_ADVANCED_FILTERS: AdvancedFilters = {
@@ -20,6 +21,7 @@ export const EMPTY_ADVANCED_FILTERS: AdvancedFilters = {
   status: "all",
   minRating: 0,
   tags: [],
+  openNow: false,
 };
 
 export function countActiveFilters(f: AdvancedFilters): number {
@@ -29,7 +31,8 @@ export function countActiveFilters(f: AdvancedFilters): number {
     f.cuisines.length +
     (f.status !== "all" ? 1 : 0) +
     (f.minRating > 0 ? 1 : 0) +
-    f.tags.length
+    f.tags.length +
+    (f.openNow ? 1 : 0)
   );
 }
 

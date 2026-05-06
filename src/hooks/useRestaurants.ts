@@ -23,6 +23,9 @@ export type Restaurant = {
   occasion?: string | null;
   tags?: string[] | null;
   photos?: string[] | null;
+  opening_hours?: { periods?: Array<{ open: { day: number; time: string }; close?: { day: number; time: string } }> } | null;
+  place_id?: string | null;
+  hours_updated_at?: string | null;
 };
 
 export type AddRestaurantInput = {
