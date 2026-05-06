@@ -131,9 +131,7 @@ function PricingPage() {
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
               }}
-            >
-              Escolha seu plano
-            </h1>
+            >{t("choose_plan")}</h1>
             <p style={{ marginTop: 10, fontSize: 14, color: "#aaa", maxWidth: 280 }}>
               {t("pricing_subtitle")}
             </p>
@@ -162,9 +160,7 @@ function PricingPage() {
                   background: billing === "monthly" ? "#1a1a18" : "transparent",
                   color: billing === "monthly" ? "#fff" : "#888",
                 }}
-              >
-                Mensal
-              </button>
+              >{t("monthly")}</button>
               <button
                 role="tab"
                 aria-selected={billing === "yearly"}
@@ -225,9 +221,7 @@ function PricingPage() {
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                 }}
-              >
-                Atual
-              </span>
+              >{t("active")}</span>
             )}
           </div>
           <p style={{ marginTop: 10, color: "#1a1a18" }}>
@@ -271,9 +265,7 @@ function PricingPage() {
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
               }}
-            >
-              Recomendado
-            </span>
+            >{t("recommended")}</span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -291,9 +283,7 @@ function PricingPage() {
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                 }}
-              >
-                Ativo
-              </span>
+              >{t("active")}</span>
             )}
           </div>
 
@@ -405,9 +395,7 @@ function PricingPage() {
           search={{ list: undefined }}
           className="block text-center py-2"
           style={{ fontSize: 14, color: "#aaa" }}
-        >
-          Voltar ao app
-        </Link>
+        >{t("close")}</Link>
       </div>
     </div>
   );
