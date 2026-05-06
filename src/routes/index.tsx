@@ -7,6 +7,10 @@ import { RestaurantCard } from "@/components/RestaurantCard";
 import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
 import { InviteDialog } from "@/components/InviteDialog";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import { InstallGuideDialog } from "@/components/InstallGuideDialog";
+import { InstallSuccessDialog } from "@/components/InstallSuccessDialog";
+import { usePWABanner } from "@/hooks/usePWABanner";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
 import { useUpgradeModal } from "@/hooks/useUpgradeModal";
@@ -167,6 +171,8 @@ function Index() {
   const [listDropdown, setListDropdown] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const { shouldShow: showPwaBanner, dismiss: dismissPwaBanner, showInstalled, dismissInstalled } = usePWABanner();
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
 
   const switchTab = useCallback((next: Tab) => {
     setTab(next);
@@ -731,6 +737,12 @@ function Index() {
             </div>
           </div>
           )}
+          {showPwaBanner && (
+            <PWAInstallBanner
+              onInstall={() => setInstallGuideOpen(true)}
+              onDismiss={dismissPwaBanner}
+            />
+          )}
         </div>
       </header>
 
@@ -1008,6 +1020,12 @@ function Index() {
           onRate={handleRate}
         />
       )}
+      <InstallGuideDialog open={installGuideOpen} onOpenChange={setInstallGuideOpen} />
+      <InstallSuccessDialog
+        open={showInstalled}
+        onOpenChange={(o) => { if (!o) dismissInstalled(); }}
+        onGoToList={dismissInstalled}
+      />
     </div>
   );
 }
