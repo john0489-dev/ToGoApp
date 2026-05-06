@@ -257,6 +257,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
       notes: z.string().max(2000).optional(),
       tags: z.array(z.string().max(40)).max(20).optional(),
       occasion: z.string().max(100).optional(),
+      dish_favorite: z.string().max(100).optional(),
       price_range: z.enum(["$", "$$", "$$$", "$$$$"]).optional(),
     })
   )
