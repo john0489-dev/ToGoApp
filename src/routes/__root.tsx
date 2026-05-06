@@ -8,9 +8,10 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { Toaster } from "@/components/ui/sonner";
+import { I18nextProvider } from "react-i18next";
 
 import appCss from "../styles.css?url";
-import "../lib/i18n";
+import i18n from "../lib/i18n";
 
 // build: force rebuild 2026-04-23
 
@@ -141,19 +142,21 @@ function RootComponent() {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PlanProvider>
-            <UpgradeModalProvider>
-              <PaymentTestModeBanner />
-              <Outlet />
-              <GlobalLegalFooter />
-              <OfflineBanner />
-              <Toaster />
-            </UpgradeModalProvider>
-          </PlanProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <I18nextProvider i18n={i18n}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <PlanProvider>
+              <UpgradeModalProvider>
+                <PaymentTestModeBanner />
+                <Outlet />
+                <GlobalLegalFooter />
+                <OfflineBanner />
+                <Toaster />
+              </UpgradeModalProvider>
+            </PlanProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </I18nextProvider>
     </ErrorBoundary>
   );
 }
