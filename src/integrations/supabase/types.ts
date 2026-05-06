@@ -304,6 +304,7 @@ export type Database = {
           address: string | null
           created_at: string
           cuisine: string
+          dish_favorite: string | null
           id: string
           latitude: number | null
           list_id: string
@@ -326,6 +327,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           cuisine?: string
+          dish_favorite?: string | null
           id?: string
           latitude?: number | null
           list_id: string
@@ -348,6 +350,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           cuisine?: string
+          dish_favorite?: string | null
           id?: string
           latitude?: number | null
           list_id?: string
