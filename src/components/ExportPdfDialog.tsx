@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X, FileDown, Loader2 } from "lucide-react";
 import type { SortBy, IncludeStatus } from "@/lib/exportPdf";
 
@@ -27,6 +28,7 @@ const DEFAULTS: ExportPdfOptionsValue = {
 };
 
 export function ExportPdfDialog({ open, onClose, onConfirm, allowAllLists = true, currentListName }: Props) {
+  const { t } = useTranslation();
   const [opts, setOpts] = useState<ExportPdfOptionsValue>(DEFAULTS);
   const [loading, setLoading] = useState(false);
 
@@ -82,7 +84,7 @@ export function ExportPdfDialog({ open, onClose, onConfirm, allowAllLists = true
             <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "#1a1a18" }}>
               <FileDown size={15} style={{ color: "#c4844a" }} />
             </div>
-            <h2 className="text-base font-semibold text-gray-900">Exportar em PDF</h2>
+            <h2 className="text-base font-semibold text-gray-900">{t("export_pdf")}</h2>
           </div>
           <button
             onClick={onClose}
@@ -96,51 +98,51 @@ export function ExportPdfDialog({ open, onClose, onConfirm, allowAllLists = true
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-          <Section title="Exportar">
+          <Section title={t("export_scope", { defaultValue: "Exportar" })}>
             <RadioRow
-              label={currentListName ? `Lista atual (${currentListName})` : "Lista atual"}
+              label={currentListName ? `${t("current_list", { defaultValue: "Lista atual" })} (${currentListName})` : t("current_list", { defaultValue: "Lista atual" })}
               checked={opts.scope === "current"}
               onChange={() => setOpts((o) => ({ ...o, scope: "current" }))}
             />
             {allowAllLists && (
               <RadioRow
-                label="Todas as listas"
+                label={t("all_lists", { defaultValue: "Todas as listas" })}
                 checked={opts.scope === "all"}
                 onChange={() => setOpts((o) => ({ ...o, scope: "all" }))}
               />
             )}
           </Section>
 
-          <Section title="Incluir">
+          <Section title={t("include", { defaultValue: "Incluir" })}>
             <ChipRow
               options={[
-                { v: "all", label: "Todos" },
-                { v: "to-visit", label: "Para Visitar" },
-                { v: "visited", label: "Visitados" },
+                { v: "all", label: t("filter_all") },
+                { v: "to-visit", label: t("filter_to_visit") },
+                { v: "visited", label: t("filter_visited") },
               ]}
               value={opts.includeStatus}
               onChange={(v) => setOpts((o) => ({ ...o, includeStatus: v as IncludeStatus }))}
             />
           </Section>
 
-          <Section title="Ordenar por">
+          <Section title={t("sort_by", { defaultValue: "Ordenar por" })}>
             <ChipRow
               options={[
-                { v: "name", label: "Nome" },
-                { v: "location", label: "Bairro" },
-                { v: "cuisine", label: "Culinária" },
-                { v: "date", label: "Data" },
+                { v: "name", label: t("name", { defaultValue: "Nome" }) },
+                { v: "location", label: t("neighborhood", { defaultValue: "Bairro" }) },
+                { v: "cuisine", label: t("cuisine") },
+                { v: "date", label: t("date", { defaultValue: "Data" }) },
               ]}
               value={opts.sortBy}
               onChange={(v) => setOpts((o) => ({ ...o, sortBy: v as SortBy }))}
             />
           </Section>
 
-          <Section title="Incluir notas">
+          <Section title={t("include_notes", { defaultValue: "Incluir notas" })}>
             <ChipRow
               options={[
-                { v: "yes", label: "Sim" },
-                { v: "no", label: "Não" },
+                { v: "yes", label: t("yes", { defaultValue: "Sim" }) },
+                { v: "no", label: t("no", { defaultValue: "Não" }) },
               ]}
               value={opts.includeNotes ? "yes" : "no"}
               onChange={(v) => setOpts((o) => ({ ...o, includeNotes: v === "yes" }))}
@@ -168,12 +170,12 @@ export function ExportPdfDialog({ open, onClose, onConfirm, allowAllLists = true
             {loading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Gerando...
+                {t("generating", { defaultValue: "Gerando..." })}
               </>
             ) : (
               <>
                 <FileDown size={16} />
-                Exportar PDF
+                {t("export_pdf")}
               </>
             )}
           </button>
