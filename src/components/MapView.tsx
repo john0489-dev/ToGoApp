@@ -80,6 +80,7 @@ function markerSvg(color: string) {
 }
 
 function MapViewImpl({ restaurants }: MapViewProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
