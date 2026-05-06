@@ -274,6 +274,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
     if (data.notes !== undefined) update.notes = data.notes;
     if (data.tags !== undefined) update.tags = data.tags;
     if (data.occasion !== undefined) update.occasion = data.occasion;
+    if (data.dish_favorite !== undefined) update.dish_favorite = data.dish_favorite;
     if (data.price_range !== undefined) update.price_range = data.price_range;
 
     const { error } = await supabase
