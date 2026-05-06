@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdvancedFiltersSheet } from "@/components/AdvancedFiltersSheet";
-import { SlidersHorizontal, FileDown } from "lucide-react";
+import { SlidersHorizontal, FileDown, Clock, Loader2 } from "lucide-react";
 import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
 import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
 import { toast } from "sonner";
