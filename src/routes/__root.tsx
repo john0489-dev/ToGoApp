@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
+import "../lib/i18n";
 
 // build: force rebuild 2026-04-23
 
