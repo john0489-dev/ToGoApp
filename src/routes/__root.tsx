@@ -6,6 +6,7 @@ import { PlanProvider } from "@/hooks/usePlan";
 import { UpgradeModalProvider } from "@/hooks/useUpgradeModal";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
@@ -147,6 +148,7 @@ function RootComponent() {
               <PaymentTestModeBanner />
               <Outlet />
               <GlobalLegalFooter />
+              <OfflineBanner />
               <Toaster />
             </UpgradeModalProvider>
           </PlanProvider>
