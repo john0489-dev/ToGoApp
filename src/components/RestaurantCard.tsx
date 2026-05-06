@@ -1,4 +1,5 @@
 import { memo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash2, CheckCircle2, Circle } from "lucide-react";
 import { RestaurantDetailsDialog, type RestaurantDetails } from "./RestaurantDetailsDialog";
 
@@ -19,6 +20,7 @@ function RestaurantCardImpl({
   onSaveDishFavorite,
   isOpen,
 }: RestaurantCardProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation();
 

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Sparkles, X, Check } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -20,7 +21,7 @@ const COPY: Record<UpgradeReason, { title: string; text: string; highlights: str
       "Restaurantes ilimitados",
       "Listas ilimitadas",
       "Fotos, notas e tags",
-      "Filtros avançados",
+      t("advanced_filters"),
     ],
   },
   lists: {
@@ -30,7 +31,7 @@ const COPY: Record<UpgradeReason, { title: string; text: string; highlights: str
       "Listas ilimitadas e customizáveis",
       "Compartilhamento colaborativo",
       "Tags personalizadas",
-      "Exportar lista em PDF",
+      t("export_pdf"),
     ],
   },
   feature: {
@@ -39,13 +40,14 @@ const COPY: Record<UpgradeReason, { title: string; text: string; highlights: str
     highlights: [
       "Fotos e notas detalhadas",
       "Tags personalizadas",
-      "Filtros avançados (preço, ocasião)",
+      t("advanced_filters"),
       "Histórico de visitas e PDF",
     ],
   },
 };
 
-export function UpgradeModal({ open, onClose, reason = "feature", featureName }: Props) {
+export function UpgradeModal({
+  const { t } = useTranslation(); open, onClose, reason = "feature", featureName }: Props) {
   const navigate = useNavigate();
   const copy = COPY[reason];
   const title = reason === "feature" && featureName ? `${featureName} é Pro` : copy.title;

@@ -1,5 +1,6 @@
 /// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState, memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,6 +35,7 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
 type DistanceFilter = 0 | 1 | 3 | 5; // 0 = todos
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const { t } = useTranslation();
   const R = 6371;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
@@ -359,7 +361,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
                 }}
                 title={d === 0 ? "Mostrar todos" : `Até ${d} km da minha localização`}
               >
-                {d === 0 ? "Todos" : `${d}km`}
+                {d === 0 ? t("filter_all") : `${d}km`}
               </button>
             );
           })}

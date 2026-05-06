@@ -171,7 +171,7 @@ function SettingsPage() {
           r.name,
           r.location ?? "",
           r.cuisine ?? "",
-          r.visited ? "Visitado" : "Para Visitar",
+          r.visited ? t("filter_visited") : t("filter_to_visit"),
           r.rating ?? "",
           r.notes ?? "",
           Array.isArray(r.tags) ? r.tags.join("; ") : "",

@@ -905,8 +905,8 @@ function Index() {
                 </>
               ) : (
                 <>
-                  <ProLockBadge variant="button" featureName="Filtros avançados" />
-                  <ProLockBadge variant="button" featureName="Exportar PDF" />
+                  <ProLockBadge variant="button" {...{featureName: t("advanced_filters")}} />
+                  <ProLockBadge variant="button" {...{featureName: t("export_pdf")}} />
                   <ProLockBadge variant="button" featureName="Tags" />
                 </>
               )}

@@ -141,7 +141,7 @@ export function RestaurantDetailsDialog({
                 className="inline-block h-1.5 w-1.5 rounded-full"
                 style={{ background: restaurant.visited ? "#3a9a5c" : "#c4844a" }}
               />
-              {restaurant.visited ? "Visitado" : "Para Visitar"}
+              {restaurant.visited ? t("filter_visited") : t("filter_to_visit")}
             </span>
             <span
               className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
