@@ -42,8 +42,14 @@ export function RestaurantDetailsDialog({
   onToggleVisited,
   onDelete,
   onRate,
+  onSaveDishFavorite,
 }: Props) {
   const [addedByEmail, setAddedByEmail] = useState<string | null>(null);
+  const [dishFavorite, setDishFavorite] = useState<string>(restaurant.dish_favorite ?? "");
+
+  useEffect(() => {
+    setDishFavorite(restaurant.dish_favorite ?? "");
+  }, [restaurant.id, restaurant.dish_favorite]);
 
   useEffect(() => {
     if (!open || !restaurant.added_by || !restaurant.list_id) {
