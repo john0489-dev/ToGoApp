@@ -79,6 +79,7 @@ type ListItem = {
 function IndexWrapper() {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -89,7 +90,7 @@ function IndexWrapper() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">{i18n.t("loading", { defaultValue: "Carregando..." })}</p>
+        <p className="text-muted-foreground">{t("loading", { defaultValue: "Carregando..." })}</p>
       </div>
     );
   }
