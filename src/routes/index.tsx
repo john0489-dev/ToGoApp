@@ -830,10 +830,10 @@ function Index() {
                 >
                   <span className="truncate">
                     {cuisineFilter.length === 0
-                      ? "Todas"
+                      ? t("cuisine_all", { defaultValue: "Todas" })
                       : cuisineFilter.length === 1
                       ? cuisineFilter[0]
-                      : `${cuisineFilter.length} selecionadas`}
+                      : `${cuisineFilter.length} ${t("cuisine_selected", { defaultValue: "selecionadas" })}`}
                   </span>
                   <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
                 </button>
@@ -844,7 +844,7 @@ function Index() {
                       onClick={() => { setCuisineFilter([]); setCuisineDropdownOpen(false); }}
                       className={`w-full px-3 py-2 text-left text-sm border-b border-border active:bg-accent transition-colors ${cuisineFilter.length === 0 ? "font-medium text-primary" : "text-foreground"}`}
                     >
-                      Todas
+                      {t("cuisine_all", { defaultValue: "Todas" })}
                     </button>
                     <div className="max-h-56 overflow-y-auto">
                       {cuisines.map((c) => {
