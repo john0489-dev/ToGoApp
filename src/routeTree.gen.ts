@@ -22,6 +22,7 @@ import { Route as PaymentCanceledRouteImport } from './routes/payment.canceled'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ApiSuggestCuisineRouteImport } from './routes/api/suggest-cuisine'
 import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
+import { Route as ApiMapsOpenNowRouteImport } from './routes/api/maps.open-now'
 import { Route as ApiMapsGeocodeRouteImport } from './routes/api/maps.geocode'
 import { Route as ApiMapsConfigRouteImport } from './routes/api/maps.config'
 import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autocomplete'
@@ -91,6 +92,11 @@ const ApiChefAiRoute = ApiChefAiRouteImport.update({
   path: '/api/chef-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMapsOpenNowRoute = ApiMapsOpenNowRouteImport.update({
+  id: '/api/maps/open-now',
+  path: '/api/maps/open-now',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMapsGeocodeRoute = ApiMapsGeocodeRouteImport.update({
   id: '/api/maps/geocode',
   path: '/api/maps/geocode',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
   '/api/maps/config': typeof ApiMapsConfigRoute
   '/api/maps/geocode': typeof ApiMapsGeocodeRoute
+  '/api/maps/open-now': typeof ApiMapsOpenNowRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
   '/api/maps/config': typeof ApiMapsConfigRoute
   '/api/maps/geocode': typeof ApiMapsGeocodeRoute
+  '/api/maps/open-now': typeof ApiMapsOpenNowRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
   '/api/maps/config': typeof ApiMapsConfigRoute
   '/api/maps/geocode': typeof ApiMapsGeocodeRoute
+  '/api/maps/open-now': typeof ApiMapsOpenNowRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/api/maps/autocomplete'
     | '/api/maps/config'
     | '/api/maps/geocode'
+    | '/api/maps/open-now'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/api/maps/autocomplete'
     | '/api/maps/config'
     | '/api/maps/geocode'
+    | '/api/maps/open-now'
   id:
     | '__root__'
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/api/maps/autocomplete'
     | '/api/maps/config'
     | '/api/maps/geocode'
+    | '/api/maps/open-now'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   ApiMapsAutocompleteRoute: typeof ApiMapsAutocompleteRoute
   ApiMapsConfigRoute: typeof ApiMapsConfigRoute
   ApiMapsGeocodeRoute: typeof ApiMapsGeocodeRoute
+  ApiMapsOpenNowRoute: typeof ApiMapsOpenNowRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChefAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/maps/open-now': {
+      id: '/api/maps/open-now'
+      path: '/api/maps/open-now'
+      fullPath: '/api/maps/open-now'
+      preLoaderRoute: typeof ApiMapsOpenNowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/maps/geocode': {
       id: '/api/maps/geocode'
       path: '/api/maps/geocode'
@@ -372,7 +392,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMapsAutocompleteRoute: ApiMapsAutocompleteRoute,
   ApiMapsConfigRoute: ApiMapsConfigRoute,
   ApiMapsGeocodeRoute: ApiMapsGeocodeRoute,
+  ApiMapsOpenNowRoute: ApiMapsOpenNowRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
