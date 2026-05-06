@@ -70,6 +70,19 @@ function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
+    if (typeof window === "undefined") return "light";
+    try { return (localStorage.getItem("togo_theme") as "light" | "dark" | "system") || "light"; } catch { return "light"; }
+  });
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("togo_notifications") === "true"; } catch { return false; }
+  });
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<"bug" | "suggestion" | "compliment">("suggestion");
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const currentLang = (i18n.language?.slice(0, 2) || "pt") as "pt" | "en" | "es";
   const userName = (user?.user_metadata?.name as string | undefined) || (user?.email?.split("@")[0] ?? "");
@@ -234,13 +247,14 @@ function SettingsPage() {
 
   const handleFeedbackSubmit = async () => {
     if (!feedbackMsg.trim()) return;
+    if (!userId) return;
     setFeedbackLoading(true);
     try {
-      const { error } = await supabase.from("feedbacks").insert({
+      const { error } = await supabase.from("feedbacks").insert([{
         user_id: userId,
         type: feedbackType,
         message: feedbackMsg.trim(),
-      });
+      }]);
       if (error) throw error;
       toast.success("Obrigado pelo feedback! 🙏");
       setFeedbackOpen(false);
