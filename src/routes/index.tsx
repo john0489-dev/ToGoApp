@@ -171,6 +171,8 @@ function Index() {
   const [listDropdown, setListDropdown] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const { shouldShow: showPwaBanner, dismiss: dismissPwaBanner, showInstalled, dismissInstalled } = usePWABanner();
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
 
   const switchTab = useCallback((next: Tab) => {
     setTab(next);
