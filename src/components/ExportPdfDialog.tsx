@@ -157,9 +157,7 @@ export function ExportPdfDialog({ open, onClose, onConfirm, allowAllLists = true
             onClick={onClose}
             disabled={loading}
             className="flex-1 h-12 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-50"
-          >
-            Cancelar
-          </button>
+          >{t("cancel")}</button>
           <button
             type="button"
             onClick={handleConfirm}
