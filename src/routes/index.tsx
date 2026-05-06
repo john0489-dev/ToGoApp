@@ -261,10 +261,10 @@ function Index() {
     setVisibleCount(PAGE_SIZE);
   }, [deferredSearch, statusFilter, cuisineFilter, advancedFilters, restaurants.length]);
   const visibleRestaurants = useMemo(
-    () => filtered.slice(0, visibleCount),
-    [filtered, visibleCount]
+    () => filteredWithOpenNow.slice(0, visibleCount),
+    [filteredWithOpenNow, visibleCount]
   );
-  const hasMore = visibleCount < filtered.length;
+  const hasMore = visibleCount < filteredWithOpenNow.length;
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
