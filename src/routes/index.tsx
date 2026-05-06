@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { changeLanguage, getCurrentLang } from "@/lib/i18n";
+import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Globe } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
