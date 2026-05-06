@@ -92,6 +92,8 @@ export const renameList = createServerFn({ method: "POST" })
     if (error) safeError("renameList", error);
     return { list };
   });
+
+// Get restaurants for a list
 export const getRestaurants = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ listId: z.string().uuid() }))
