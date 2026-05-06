@@ -11,6 +11,7 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { InstallGuideDialog } from "@/components/InstallGuideDialog";
 import { InstallSuccessDialog } from "@/components/InstallSuccessDialog";
 import { usePWABanner } from "@/hooks/usePWABanner";
+import { useOpenNow } from "@/hooks/useOpenNow";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
 import { useUpgradeModal } from "@/hooks/useUpgradeModal";
