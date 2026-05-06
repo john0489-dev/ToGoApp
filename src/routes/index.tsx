@@ -173,6 +173,19 @@ function Index() {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const { shouldShow: showPwaBanner, dismiss: dismissPwaBanner, showInstalled, dismissInstalled } = usePWABanner();
   const [installGuideOpen, setInstallGuideOpen] = useState(false);
+  const [openNowEnabled, setOpenNowEnabled] = useState(false);
+  const { statuses: openNowStatuses, isLoading: openNowLoading } = useOpenNow(
+    filtered,
+    openNowEnabled
+  );
+  const filteredWithOpenNow = useMemo(() => {
+    if (!openNowEnabled) return filtered;
+    return filtered.filter((r) => {
+      const s = openNowStatuses[r.id];
+      // Include if open OR if status not yet known/null (no hours available)
+      return s !== false;
+    });
+  }, [filtered, openNowEnabled, openNowStatuses]);
 
   const switchTab = useCallback((next: Tab) => {
     setTab(next);
