@@ -174,30 +174,40 @@ function LegalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div style={{ minHeight: "100dvh", background: "#faf9f7" }}>
       <header
-        className="px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-6"
-        style={{ background: "var(--hero-gradient)" }}
+        style={{
+          background: "linear-gradient(135deg, #1a1a18 0%, #1a1a18 60%, rgba(196,132,74,0.18) 100%)",
+          padding: "max(36px, calc(env(safe-area-inset-top) + 14px)) 20px 32px",
+        }}
       >
-        <div className="mx-auto max-w-2xl">
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <Link
             to="/"
             search={{ list: undefined }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/20 text-primary-foreground"
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 36, height: 36, borderRadius: 10,
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+              color: "#fff",
+            }}
             aria-label="Voltar"
           >
             <ArrowLeft size={18} />
           </Link>
-          <h1 className="mt-4 text-2xl font-bold text-primary-foreground tracking-tight">
+          <h1 style={{
+            marginTop: 16, fontSize: 22, fontWeight: 400, color: "#fff",
+            fontFamily: "'Playfair Display', Georgia, serif", letterSpacing: "-0.02em",
+          }}>
             {title}
           </h1>
-          <p className="mt-1 text-xs text-primary-foreground/80">
+          <p style={{ marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
             Última atualização: {updated}
           </p>
         </div>
       </header>
-      <div className="mx-auto max-w-2xl px-5 py-8">
-        <article className="prose prose-sm max-w-none text-foreground [&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-bold [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground [&_a]:text-primary [&_a]:underline">
+      <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 20px 60px" }}>
+        <article style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>
           {children}
         </article>
       </div>
