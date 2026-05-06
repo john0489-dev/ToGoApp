@@ -744,20 +744,37 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
       try {
         let placeId = r.place_id as string | null;
 
-        // 1. Find place_id via FindPlaceFromText (if not cached)
+        // 1. Find place_id via Places API (New) — searchText with location bias
         if (!placeId) {
-          const query = encodeURIComponent(`${r.name} ${r.location ?? ""}`.trim());
-          const findUrl =
-            `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
-            `?input=${query}&inputtype=textquery&fields=place_id` +
-            `&locationbias=point:${r.latitude},${r.longitude}&key=${apiKey}`;
-          const findRes = await fetch(findUrl);
-          const findJson = (await findRes.json()) as {
-            status: string;
-            candidates?: { place_id: string }[];
+          const searchRes = await fetch(
+            "https://places.googleapis.com/v1/places:searchText",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": apiKey,
+                "X-Goog-FieldMask": "places.id",
+              },
+              body: JSON.stringify({
+                textQuery: `${r.name} ${r.location ?? ""}`.trim(),
+                locationBias: {
+                  circle: {
+                    center: { latitude: r.latitude, longitude: r.longitude },
+                    radius: 1000,
+                  },
+                },
+                maxResultCount: 1,
+              }),
+            }
+          );
+          const searchJson = (await searchRes.json()) as {
+            places?: { id: string }[];
+            error?: { message: string };
           };
-          if (findJson.status !== "OK" || !findJson.candidates?.length) {
-            // Mark as updated so we don't retry every time
+          if (!searchRes.ok) {
+            console.error("[refreshOpeningHours:search]", searchJson);
+          }
+          if (!searchJson.places?.length) {
             await supabase
               .from("restaurants")
               .update({ hours_updated_at: new Date().toISOString() })
@@ -765,20 +782,50 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
             failed++;
             continue;
           }
-          placeId = findJson.candidates[0].place_id;
+          placeId = searchJson.places[0].id;
         }
 
-        // 2. Fetch place details (opening_hours.periods)
-        const detUrl =
-          `https://maps.googleapis.com/maps/api/place/details/json` +
-          `?place_id=${placeId}&fields=opening_hours&key=${apiKey}`;
-        const detRes = await fetch(detUrl);
+        // 2. Fetch place details (regularOpeningHours.periods) via Places API (New)
+        const detRes = await fetch(
+          `https://places.googleapis.com/v1/places/${placeId}`,
+          {
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "X-Goog-FieldMask": "regularOpeningHours.periods",
+            },
+          }
+        );
         const detJson = (await detRes.json()) as {
-          status: string;
-          result?: { opening_hours?: { periods?: GooglePlacesPeriod[] } };
+          regularOpeningHours?: {
+            periods?: Array<{
+              open?: { day: number; hour: number; minute: number };
+              close?: { day: number; hour: number; minute: number };
+            }>;
+          };
+          error?: { message: string };
         };
+        if (!detRes.ok) {
+          console.error("[refreshOpeningHours:details]", detJson);
+        }
 
-        const periods = detJson.result?.opening_hours?.periods ?? null;
+        // Convert New API format → legacy format expected by isOpenNow
+        const newPeriods = detJson.regularOpeningHours?.periods ?? null;
+        const periods: GooglePlacesPeriod[] | null = newPeriods
+          ? newPeriods
+              .filter((p) => p.open)
+              .map((p) => ({
+                open: {
+                  day: p.open!.day,
+                  time: `${String(p.open!.hour).padStart(2, "0")}${String(p.open!.minute).padStart(2, "0")}`,
+                },
+                close: p.close
+                  ? {
+                      day: p.close.day,
+                      time: `${String(p.close.hour).padStart(2, "0")}${String(p.close.minute).padStart(2, "0")}`,
+                    }
+                  : undefined,
+              }))
+          : null;
 
         const { error: upErr } = await supabase
           .from("restaurants")
