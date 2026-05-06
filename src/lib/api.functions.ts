@@ -722,6 +722,7 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
     const BATCH_SIZE = 8;
     const STALE_DAYS = 7;
     const staleCutoff = new Date(Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const missingHoursRetryCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { supabase } = context;
 
     // Pick rows that have coordinates but no cached hours, or stale hours.
@@ -733,7 +734,9 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
       .eq("list_id", data.listId)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
-      .or(`opening_hours.is.null,hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`)
+      .or(
+        `hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff},and(opening_hours.is.null,hours_updated_at.lt.${missingHoursRetryCutoff})`
+      )
       .limit(BATCH_SIZE);
 
     if (error) safeError("refreshOpeningHours:fetch", error);
@@ -856,7 +859,9 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
       .eq("list_id", data.listId)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
-      .or(`opening_hours.is.null,hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`);
+      .or(
+        `hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff},and(opening_hours.is.null,hours_updated_at.lt.${missingHoursRetryCutoff})`
+      );
 
     return { processed: pending.length, updated, failed, remaining: remaining ?? 0 };
   });
