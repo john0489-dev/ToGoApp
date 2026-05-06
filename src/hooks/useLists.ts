@@ -4,6 +4,7 @@ import {
   getUserLists,
   createList as createListFn,
   deleteList as deleteListFn,
+  renameList as renameListFn,
 } from "@/lib/api.functions";
 
 export type ListItem = {
@@ -74,6 +75,17 @@ export function useLists(params: {
     [accessToken]
   );
 
+  const renameList = useCallback(
+    async (listId: string, name: string) => {
+      if (!accessToken) throw new Error("No access token");
+      await renameListFn({
+        data: { listId, name },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    },
+    [accessToken]
+  );
+
   return {
     lists,
     isLoading: listsQuery.isLoading,
@@ -85,5 +97,6 @@ export function useLists(params: {
     setLists,
     createList,
     deleteList,
+    renameList,
   };
 }
