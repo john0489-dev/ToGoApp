@@ -89,7 +89,7 @@ function IndexWrapper() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
+        <p className="text-muted-foreground">{i18n.t("loading", { defaultValue: "Carregando..." })}</p>
       </div>
     );
   }
