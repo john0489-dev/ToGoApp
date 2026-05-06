@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Loader2, Sparkles, Search, MapPin } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 
@@ -78,6 +79,7 @@ function shortAddress(p: PlaceResult): string {
 }
 
 export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [cuisine, setCuisine] = useState("Bar");
@@ -218,7 +220,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
       <div className="fixed inset-0 bg-foreground/40" onClick={onClose} />
       <div className="relative z-10 w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-card p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-card-foreground">Adicionar Restaurante</h2>
+          <h2 className="text-lg font-semibold text-card-foreground">{t("add_restaurant")}</h2>
           <button onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground">
             <X size={20} />
           </button>
@@ -226,7 +228,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
         <form onSubmit={handleSubmit} className="space-y-4">
           <div ref={searchWrapperRef} style={{ position: "relative" }}>
             <label className="block text-sm font-medium text-card-foreground mb-1">
-              Buscar restaurante
+              {t("search_placeholder").replace("...", "")}
             </label>
             <div className="relative">
               <Search
@@ -247,7 +249,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
                   }
                 }}
                 onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
-                placeholder="Buscar restaurante por nome..."
+                placeholder={t("search_placeholder")}
                 className="w-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                 style={{
                   background: "#fff",
@@ -353,7 +355,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
 
           <div>
             <label className="block text-sm font-medium text-card-foreground mb-1">
-              Localização / Endereço
+              {t("location")}
             </label>
             <input
               type="text"
@@ -366,7 +368,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
 
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <label className="block text-sm font-medium text-card-foreground">Culinária</label>
+              <label className="block text-sm font-medium text-card-foreground">{t("cuisine")}</label>
               {cuisineLoading && (
                 <Loader2 size={12} className="animate-spin text-muted-foreground" />
               )}
@@ -403,7 +405,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
               borderRadius: "14px",
             }}
           >
-            Adicionar
+            {t("add_btn")}
           </button>
         </form>
       </div>
