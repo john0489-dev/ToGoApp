@@ -896,7 +896,7 @@ function Index() {
                     );
                   })}
                 </div>
-              ) : filtered.length === 0 ? (
+              ) : filteredWithOpenNow.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">Nenhum restaurante encontrado.</p>
               ) : (
                 <>
