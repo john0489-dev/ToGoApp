@@ -100,12 +100,15 @@ function IndexWrapper() {
 }
 
 function Index() {
+  const { t, i18n } = useTranslation();
   const { user, session, isAuthenticated } = useAuth();
   const { plan, usage, limits, refresh: refreshPlan } = usePlan();
   const { open: openUpgrade } = useUpgradeModal();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const routeSearch = Route.useSearch();
+  const [langDropdown, setLangDropdown] = useState(false);
+  const currentLang = i18n.language?.slice(0, 2) || "pt";
 
   const accessToken = session?.access_token;
   const userId = user?.id;
