@@ -281,7 +281,7 @@ function Index() {
     );
     io.observe(node);
     return () => io.disconnect();
-  }, [hasMore, filtered.length]);
+  }, [hasMore, filteredWithOpenNow.length]);
 
   const handleToggleVisited = useCallback((id: string) => toggleVisited(id), [toggleVisited]);
 
