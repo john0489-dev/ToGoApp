@@ -13,42 +13,43 @@ interface Props {
   featureName?: string;
 }
 
-const COPY: Record<UpgradeReason, { title: string; text: string; highlights: string[] }> = {
-  restaurants: {
-    title: "Você atingiu seu limite de restaurantes",
-    text: "Usuários Free podem salvar até 20 restaurantes. Faça upgrade para o To Go Pro e salve quantos quiser.",
-    highlights: [
-      "Restaurantes ilimitados",
-      "Listas ilimitadas",
-      "Fotos, notas e tags",
-      t("advanced_filters"),
-    ],
-  },
-  lists: {
-    title: "Limite de listas atingido",
-    text: "Plano Free permite até 3 listas. Upgrade para listas ilimitadas.",
-    highlights: [
-      "Listas ilimitadas e customizáveis",
-      "Compartilhamento colaborativo",
-      "Tags personalizadas",
-      t("export_pdf"),
-    ],
-  },
-  feature: {
-    title: "Recurso exclusivo do To Go Pro",
-    text: "Esse recurso está disponível apenas para assinantes do To Go Pro.",
-    highlights: [
-      "Fotos e notas detalhadas",
-      "Tags personalizadas",
-      t("advanced_filters"),
-      "Histórico de visitas e PDF",
-    ],
-  },
-};
-
-export function UpgradeModal({
-  const { t } = useTranslation(); open, onClose, reason = "feature", featureName }: Props) {
+export function UpgradeModal({ open, onClose, reason = "feature", featureName }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const COPY: Record<UpgradeReason, { title: string; text: string; highlights: string[] }> = {
+    restaurants: {
+      title: "Você atingiu seu limite de restaurantes",
+      text: "Usuários Free podem salvar até 20 restaurantes. Faça upgrade para o To Go Pro e salve quantos quiser.",
+      highlights: [
+        "Restaurantes ilimitados",
+        "Listas ilimitadas",
+        "Fotos, notas e tags",
+        t("advanced_filters"),
+      ],
+    },
+    lists: {
+      title: "Limite de listas atingido",
+      text: "Plano Free permite até 3 listas. Upgrade para listas ilimitadas.",
+      highlights: [
+        "Listas ilimitadas e customizáveis",
+        "Compartilhamento colaborativo",
+        "Tags personalizadas",
+        t("export_pdf"),
+      ],
+    },
+    feature: {
+      title: "Recurso exclusivo do To Go Pro",
+      text: "Esse recurso está disponível apenas para assinantes do To Go Pro.",
+      highlights: [
+        "Fotos e notas detalhadas",
+        "Tags personalizadas",
+        t("advanced_filters"),
+        "Histórico de visitas e PDF",
+      ],
+    },
+  };
+
   const copy = COPY[reason];
   const title = reason === "feature" && featureName ? `${featureName} é Pro` : copy.title;
 
