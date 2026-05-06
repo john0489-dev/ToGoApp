@@ -963,7 +963,7 @@ function Index() {
             className={tab === "location" ? "absolute inset-0 overflow-hidden" : "hidden"}
             style={tab === "location" ? { bottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
           >
-            <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Carregando mapa...</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">{t("loading_map", { defaultValue: "Carregando mapa..." })}</div>}>
               <LazyMapView restaurants={restaurants} />
             </Suspense>
           </div>
