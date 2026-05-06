@@ -123,6 +123,21 @@ export function AdvancedFiltersSheet({
 
         {/* Body — scrollable */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+          {/* Aberto agora */}
+          <Section title={t("open_now")}>
+            <button
+              type="button"
+              onClick={() => onChange({ ...value, openNow: !value.openNow })}
+              className={`w-full h-10 rounded-xl text-sm font-medium transition-colors ${
+                value.openNow
+                  ? "bg-[#c4844a] text-white"
+                  : "bg-gray-100 text-gray-700 active:bg-gray-200"
+              }`}
+            >
+              {value.openNow ? `✓ ${t("open_now")}` : t("open_now")}
+            </button>
+          </Section>
+
           {/* Status */}
           <Section title={t("status_label", { defaultValue: "Status" })}>
             <div className="flex gap-2">
