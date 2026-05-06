@@ -18,6 +18,8 @@ export type RestaurantDetails = {
   created_at?: string;
   list_id?: string | null;
   photos?: string[] | null;
+  dish_favorite?: string | null;
+  notes?: string | null;
 };
 
 interface Props {
@@ -28,6 +30,7 @@ interface Props {
   onDelete: (id: string) => void;
   onRate: (id: string, rating: number) => void;
   onPhotosChange?: (id: string, photos: string[]) => void;
+  onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
 }
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
