@@ -11,7 +11,7 @@ export type GooglePeriod = {
   close?: { day: number; time: string };
 };
 
-export type OpeningHours = { periods: GooglePeriod[] } | null | undefined;
+export type OpeningHours = { periods?: GooglePeriod[] } | null | undefined;
 
 function toMinutes(day: number, time: string): number {
   const h = parseInt(time.slice(0, 2), 10) || 0;
