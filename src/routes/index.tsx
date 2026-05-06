@@ -430,6 +430,38 @@ function Index() {
     void runGeocode(false);
   }, [activeListId, session, geocoding, restaurants, runGeocode]);
 
+  // Auto-refresh opening hours from Google Places (hybrid strategy).
+  // Runs in background once per list when stale or missing hours are detected.
+  const hoursRefreshStartedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeListId || !session || restaurants.length === 0) return;
+    if (hoursRefreshStartedRef.current === activeListId) return;
+    const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+    const needsRefresh = restaurants.some(
+      (r) =>
+        r.latitude != null &&
+        r.longitude != null &&
+        (!r.hours_updated_at || Date.now() - new Date(r.hours_updated_at).getTime() > STALE_MS)
+    );
+    if (!needsRefresh) return;
+    hoursRefreshStartedRef.current = activeListId;
+    (async () => {
+      try {
+        let safety = 30;
+        while (safety-- > 0) {
+          const res = await refreshOpeningHours({
+            data: { listId: activeListId },
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (res.processed === 0 || res.remaining === 0) break;
+        }
+        await loadRestaurants();
+      } catch (err) {
+        console.error("[refreshOpeningHours] failed:", err);
+      }
+    })();
+  }, [activeListId, session, restaurants, loadRestaurants]);
+
   useEffect(() => {
     if (!cuisineDropdownOpen) return;
     const handler = (e: MouseEvent) => {
