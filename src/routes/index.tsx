@@ -838,6 +838,24 @@ function Index() {
             </div>
 
             <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setOpenNowEnabled((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+                style={
+                  openNowEnabled
+                    ? { background: "#1a1a18", color: "#fff", border: "1px solid #1a1a18" }
+                    : { background: "#fff", color: "#888", border: "1px solid #ede9e3" }
+                }
+                aria-pressed={openNowEnabled}
+              >
+                {openNowEnabled && openNowLoading ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Clock size={12} />
+                )}
+                <span>Aberto agora</span>
+              </button>
               {plan === "pro" ? (
                 <>
                   <button
