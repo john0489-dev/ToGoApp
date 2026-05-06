@@ -8,6 +8,7 @@ interface RestaurantCardProps {
   onDelete: (id: string) => void;
   onRate: (id: string, rating: number) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
+  isOpen?: boolean | null;
 }
 
 function RestaurantCardImpl({
@@ -16,6 +17,7 @@ function RestaurantCardImpl({
   onDelete,
   onRate,
   onSaveDishFavorite,
+  isOpen,
 }: RestaurantCardProps) {
   const [open, setOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation();
@@ -73,6 +75,19 @@ function RestaurantCardImpl({
               />
               {restaurant.visited ? "Visitado" : "Para Visitar"}
             </span>
+            {isOpen === true && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                style={{
+                  background: "#edf7f0",
+                  color: "#3a9a5c",
+                  border: "1px solid #c0e8cf",
+                }}
+              >
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#3a9a5c]" />
+                Aberto agora
+              </span>
+            )}
           </div>
 
           {restaurant.dish_favorite && (

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
+import { isOpenNow } from "@/lib/openingHours";
 import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
 import { InviteDialog } from "@/components/InviteDialog";
@@ -945,6 +946,7 @@ function Index() {
                       onDelete={handleDelete}
                       onRate={handleRate}
                       onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
+                      isOpen={advancedFilters.openNow ? isOpenNow(r.opening_hours ?? null) : null}
                     />
                   ))}
                   {hasMore && (
