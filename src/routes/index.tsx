@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { changeLanguage, getCurrentLang } from "@/lib/i18n";
+import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Globe } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
@@ -11,7 +13,6 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { InstallGuideDialog } from "@/components/InstallGuideDialog";
 import { InstallSuccessDialog } from "@/components/InstallSuccessDialog";
 import { usePWABanner } from "@/hooks/usePWABanner";
-import { useOpenNow } from "@/hooks/useOpenNow";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
 import { useUpgradeModal } from "@/hooks/useUpgradeModal";
@@ -23,7 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdvancedFiltersSheet } from "@/components/AdvancedFiltersSheet";
-import { SlidersHorizontal, FileDown, Clock, Loader2 } from "lucide-react";
+import { SlidersHorizontal, FileDown } from "lucide-react";
 import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
 import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
 import { toast } from "sonner";
@@ -99,12 +100,15 @@ function IndexWrapper() {
 }
 
 function Index() {
+  const { t, i18n } = useTranslation();
   const { user, session, isAuthenticated } = useAuth();
   const { plan, usage, limits, refresh: refreshPlan } = usePlan();
   const { open: openUpgrade } = useUpgradeModal();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const routeSearch = Route.useSearch();
+  const [langDropdown, setLangDropdown] = useState(false);
+  const currentLang = i18n.language?.slice(0, 2) || "pt";
 
   const accessToken = session?.access_token;
   const userId = user?.id;
@@ -174,19 +178,6 @@ function Index() {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const { shouldShow: showPwaBanner, dismiss: dismissPwaBanner, showInstalled, dismissInstalled } = usePWABanner();
   const [installGuideOpen, setInstallGuideOpen] = useState(false);
-  const [openNowEnabled, setOpenNowEnabled] = useState(false);
-  const { statuses: openNowStatuses, isLoading: openNowLoading } = useOpenNow(
-    filtered,
-    openNowEnabled
-  );
-  const filteredWithOpenNow = useMemo(() => {
-    if (!openNowEnabled) return filtered;
-    return filtered.filter((r) => {
-      const s = openNowStatuses[r.id];
-      // Include if open OR if status not yet known/null (no hours available)
-      return s !== false;
-    });
-  }, [filtered, openNowEnabled, openNowStatuses]);
 
   const switchTab = useCallback((next: Tab) => {
     setTab(next);
@@ -261,10 +252,10 @@ function Index() {
     setVisibleCount(PAGE_SIZE);
   }, [deferredSearch, statusFilter, cuisineFilter, advancedFilters, restaurants.length]);
   const visibleRestaurants = useMemo(
-    () => filteredWithOpenNow.slice(0, visibleCount),
-    [filteredWithOpenNow, visibleCount]
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount]
   );
-  const hasMore = visibleCount < filteredWithOpenNow.length;
+  const hasMore = visibleCount < filtered.length;
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -274,14 +265,14 @@ function Index() {
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredWithOpenNow.length));
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
         }
       },
       { rootMargin: "400px 0px" }
     );
     io.observe(node);
     return () => io.disconnect();
-  }, [hasMore, filteredWithOpenNow.length]);
+  }, [hasMore, filtered.length]);
 
   const handleToggleVisited = useCallback((id: string) => toggleVisited(id), [toggleVisited]);
 
@@ -608,6 +599,54 @@ function Index() {
                   <Users size={16} />
                 </button>
               )}
+              <div className="relative">
+                <button
+                  onClick={() => setLangDropdown((v) => !v)}
+                  className="flex items-center justify-center transition-colors"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    background: "#fff",
+                    border: "1px solid #ede9e3",
+                    borderRadius: 10,
+                    color: "#888",
+                  }}
+                  aria-label={t("language")}
+                >
+                  <Globe size={16} />
+                </button>
+                {langDropdown && (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-1 overflow-hidden"
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #ede9e3",
+                      borderRadius: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                      minWidth: 160,
+                    }}
+                  >
+                    {([
+                      { code: "pt", label: "🇧🇷 Português" },
+                      { code: "en", label: "🇺🇸 English" },
+                      { code: "es", label: "🇪🇸 Español" },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.code}
+                        onClick={() => { changeLanguage(opt.code); setLangDropdown(false); }}
+                        className="block w-full px-3 py-2 text-left text-sm transition-colors"
+                        style={{
+                          color: "#1a1a18",
+                          background: currentLang === opt.code ? "#faf9f7" : "transparent",
+                          fontWeight: currentLang === opt.code ? 500 : 400,
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleLogout}
                 className="flex items-center justify-center transition-colors"
@@ -633,7 +672,7 @@ function Index() {
                   borderRadius: 10,
                   color: "#fff",
                 }}
-                aria-label="Adicionar restaurante"
+                aria-label={t("add_restaurant")}
               >
                 <Plus size={20} />
               </button>
@@ -654,7 +693,7 @@ function Index() {
                 color: "#1a1a18",
               }}
             >
-              <span className="truncate">{activeList?.name || "Selecionar lista"}</span>
+              <span className="truncate">{activeList?.name || t("select_list")}</span>
               <ChevronDown size={16} className="shrink-0 ml-2" style={{ color: "#888" }} />
             </button>
             {listDropdown && (
@@ -733,19 +772,19 @@ function Index() {
           >
             <div className="text-center">
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                Total
+                {t("total")}
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{totalCount}</p>
             </div>
             <div className="text-center" style={{ borderLeft: "1px solid #ede9e3", borderRight: "1px solid #ede9e3" }}>
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                Visitados
+                {t("visited")}
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{visitedCount}</p>
             </div>
             <div className="text-center">
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                Para visitar
+                {t("to_visit")}
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{toVisitCount}</p>
             </div>
@@ -770,7 +809,7 @@ function Index() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar restaurante..."
+                placeholder={t("search_placeholder")}
                 className="w-full rounded-lg border border-input bg-card pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
@@ -781,9 +820,9 @@ function Index() {
                 onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                 className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="all">Todos</option>
-                <option value="visited">Visitados</option>
-                <option value="to-visit">Para Visitar</option>
+                <option value="all">{t("filter_all")}</option>
+                <option value="visited">{t("filter_visited")}</option>
+                <option value="to-visit">{t("filter_to_visit")}</option>
               </select>
               <div ref={cuisineDropdownRef} className="flex-1 relative">
                 <button
@@ -838,24 +877,6 @@ function Index() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setOpenNowEnabled((v) => !v)}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-                style={
-                  openNowEnabled
-                    ? { background: "#1a1a18", color: "#fff", border: "1px solid #1a1a18" }
-                    : { background: "#fff", color: "#888", border: "1px solid #ede9e3" }
-                }
-                aria-pressed={openNowEnabled}
-              >
-                {openNowEnabled && openNowLoading ? (
-                  <Loader2 size={12} className="animate-spin" />
-                ) : (
-                  <Clock size={12} />
-                )}
-                <span>Aberto agora</span>
-              </button>
               {plan === "pro" ? (
                 <>
                   <button
@@ -864,7 +885,7 @@ function Index() {
                     className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
                   >
                     <SlidersHorizontal size={12} />
-                    <span>Filtros avançados</span>
+                    <span>{t("advanced_filters")}</span>
                     {advancedActiveCount > 0 && (
                       <span
                         className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
@@ -880,7 +901,7 @@ function Index() {
                     className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
                   >
                     <FileDown size={12} />
-                    <span>Exportar PDF</span>
+                    <span>{t("export_pdf")}</span>
                   </button>
                 </>
               ) : (
@@ -914,8 +935,8 @@ function Index() {
                     );
                   })}
                 </div>
-              ) : filteredWithOpenNow.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Nenhum restaurante encontrado.</p>
+              ) : filtered.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">{t("no_restaurants")}</p>
               ) : (
                 <>
                   {visibleRestaurants.map((r) => (
@@ -926,7 +947,6 @@ function Index() {
                       onDelete={handleDelete}
                       onRate={handleRate}
                       onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
-                      openNow={openNowEnabled ? openNowStatuses[r.id] ?? null : null}
                     />
                   ))}
                   {hasMore && (

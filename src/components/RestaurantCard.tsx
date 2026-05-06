@@ -8,7 +8,6 @@ interface RestaurantCardProps {
   onDelete: (id: string) => void;
   onRate: (id: string, rating: number) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
-  openNow?: boolean | null;
 }
 
 function RestaurantCardImpl({
@@ -17,7 +16,6 @@ function RestaurantCardImpl({
   onDelete,
   onRate,
   onSaveDishFavorite,
-  openNow,
 }: RestaurantCardProps) {
   const [open, setOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation();
@@ -40,19 +38,9 @@ function RestaurantCardImpl({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <h3 className="text-base font-semibold text-card-foreground truncate">
-                  {restaurant.name}
-                </h3>
-                {openNow === true && (
-                  <span
-                    className="inline-flex items-center gap-1 shrink-0 rounded-full px-1.5 py-0.5"
-                    style={{ background: "#edf7f0", color: "#3a9a5c", fontSize: 10, fontWeight: 600 }}
-                  >
-                    <span style={{ fontSize: 8 }}>●</span> Aberto
-                  </span>
-                )}
-              </div>
+              <h3 className="text-base font-semibold text-card-foreground truncate">
+                {restaurant.name}
+              </h3>
               <p className="text-sm text-muted-foreground truncate">{restaurant.location}</p>
             </div>
             <button
