@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -29,6 +30,11 @@ import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autoc
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundRoute = RefundRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/pro': typeof ProRoute
   '/refund': typeof RefundRoute
+  '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/api/chef-ai': typeof ApiChefAiRoute
   '/api/suggest-cuisine': typeof ApiSuggestCuisineRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/pro': typeof ProRoute
   '/refund': typeof RefundRoute
+  '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/api/chef-ai': typeof ApiChefAiRoute
   '/api/suggest-cuisine': typeof ApiSuggestCuisineRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/pro': typeof ProRoute
   '/refund': typeof RefundRoute
+  '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/api/chef-ai': typeof ApiChefAiRoute
   '/api/suggest-cuisine': typeof ApiSuggestCuisineRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/pro'
     | '/refund'
+    | '/settings'
     | '/terms'
     | '/api/chef-ai'
     | '/api/suggest-cuisine'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/pro'
     | '/refund'
+    | '/settings'
     | '/terms'
     | '/api/chef-ai'
     | '/api/suggest-cuisine'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/pro'
     | '/refund'
+    | '/settings'
     | '/terms'
     | '/api/chef-ai'
     | '/api/suggest-cuisine'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProRoute: typeof ProRoute
   RefundRoute: typeof RefundRoute
+  SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
   ApiChefAiRoute: typeof ApiChefAiRoute
   ApiSuggestCuisineRoute: typeof ApiSuggestCuisineRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refund': {
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProRoute: ProRoute,
   RefundRoute: RefundRoute,
+  SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
   ApiChefAiRoute: ApiChefAiRoute,
   ApiSuggestCuisineRoute: ApiSuggestCuisineRoute,

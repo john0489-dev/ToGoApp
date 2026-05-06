@@ -77,6 +77,22 @@ export const deleteList = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+// Rename a list (owner only — enforced by RLS)
+export const renameList = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ listId: z.string().uuid(), name: z.string().min(1).max(100) }))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: list, error } = await supabase
+      .from("lists")
+      .update({ name: data.name })
+      .eq("id", data.listId)
+      .select()
+      .single();
+    if (error) safeError("renameList", error);
+    return { list };
+  });
+
 // Get restaurants for a list
 export const getRestaurants = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
