@@ -247,13 +247,14 @@ function SettingsPage() {
 
   const handleFeedbackSubmit = async () => {
     if (!feedbackMsg.trim()) return;
+    if (!userId) return;
     setFeedbackLoading(true);
     try {
-      const { error } = await supabase.from("feedbacks").insert({
+      const { error } = await supabase.from("feedbacks").insert([{
         user_id: userId,
         type: feedbackType,
         message: feedbackMsg.trim(),
-      });
+      }]);
       if (error) throw error;
       toast.success("Obrigado pelo feedback! 🙏");
       setFeedbackOpen(false);
