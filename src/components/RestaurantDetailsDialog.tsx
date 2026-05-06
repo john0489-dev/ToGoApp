@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, Circle, MapPin, Trash2, ExternalLink, Calendar, User, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
@@ -44,6 +45,7 @@ export function RestaurantDetailsDialog({
   onRate,
   onSaveDishFavorite,
 }: Props) {
+  const { t } = useTranslation();
   const [addedByEmail, setAddedByEmail] = useState<string | null>(null);
   const [dishFavorite, setDishFavorite] = useState<string>(restaurant.dish_favorite ?? "");
 
@@ -161,7 +163,7 @@ export function RestaurantDetailsDialog({
               className="text-[11px] font-semibold uppercase tracking-wider"
               style={{ color: "#888" }}
             >
-              Avaliação
+              {t("rating")}
             </p>
 
             <div className="mt-2 flex items-baseline gap-1.5">
@@ -181,7 +183,7 @@ export function RestaurantDetailsDialog({
                   <span style={{ color: "#888", fontSize: 16 }}>/10</span>
                 </>
               ) : (
-                <span className="text-sm" style={{ color: "#888" }}>Sem avaliação</span>
+                <span className="text-sm" style={{ color: "#888" }}>{t("no_rating", { defaultValue: "Sem avaliação" })}</span>
               )}
             </div>
 
@@ -215,7 +217,7 @@ export function RestaurantDetailsDialog({
                 className="mt-3 text-xs font-medium hover:underline"
                 style={{ color: "#888" }}
               >
-                Remover avaliação
+                {t("remove_rating", { defaultValue: "Remover avaliação" })}
               </button>
             )}
           </div>
@@ -229,7 +231,7 @@ export function RestaurantDetailsDialog({
               className="text-[11px] font-semibold uppercase tracking-wider"
               style={{ color: "#888" }}
             >
-              Prato favorito
+              {t("favorite_dish")}
             </p>
             <div
               className="mt-2 flex items-center gap-2 rounded-xl px-3"
@@ -240,7 +242,7 @@ export function RestaurantDetailsDialog({
                 type="text"
                 value={dishFavorite}
                 maxLength={100}
-                placeholder="Ex: Risoto de funghi, Temaki salmão..."
+                placeholder={t("dish_placeholder")}
                 onChange={(e) => setDishFavorite(e.target.value)}
                 onBlur={() => {
                   const next = dishFavorite.trim();
@@ -262,7 +264,7 @@ export function RestaurantDetailsDialog({
                 className="text-[11px] font-semibold uppercase tracking-wider"
                 style={{ color: "#888" }}
               >
-                Localização
+                {t("location_label")}
               </p>
               <p className="text-sm mt-0.5" style={{ color: "#1a1a18" }}>
                 {restaurant.location || "—"}
@@ -282,7 +284,7 @@ export function RestaurantDetailsDialog({
                       className="inline-flex items-center gap-1 hover:underline"
                       style={{ color: "#c4844a" }}
                     >
-                      Abrir no Google Maps
+                      {t("open_google_maps")}
                       <ExternalLink size={12} />
                     </a>
                   )}
@@ -297,7 +299,7 @@ export function RestaurantDetailsDialog({
                       className="inline-flex items-center gap-1 hover:underline"
                       style={{ color: "#c4844a" }}
                     >
-                      Abrir no Waze
+                      {t("open_waze")}
                       <ExternalLink size={12} />
                     </a>
                   )}
@@ -312,13 +314,13 @@ export function RestaurantDetailsDialog({
               {createdAt && (
                 <div className="flex items-center gap-2" style={{ color: "#888" }}>
                   <Calendar size={14} style={{ color: "#c4844a" }} />
-                  <span>Adicionado em {dateFmt.format(createdAt)}</span>
+                  <span>{t("added_at")} {dateFmt.format(createdAt)}</span>
                 </div>
               )}
               {addedByEmail && (
                 <div className="flex items-center gap-2" style={{ color: "#888" }}>
                   <User size={14} style={{ color: "#c4844a" }} />
-                  <span className="truncate">por {addedByEmail}</span>
+                  <span className="truncate">{t("added_by")} {addedByEmail}</span>
                 </div>
               )}
             </div>
@@ -341,12 +343,12 @@ export function RestaurantDetailsDialog({
               {restaurant.visited ? (
                 <>
                   <Circle size={16} />
-                  Marcar como não visitado
+                  {t("mark_unvisited")}
                 </>
               ) : (
                 <>
                   <CheckCircle2 size={16} />
-                  Marcar como visitado
+                  {t("mark_visited")}
                 </>
               )}
             </button>
@@ -363,7 +365,7 @@ export function RestaurantDetailsDialog({
               }}
             >
               <Trash2 size={16} />
-              Excluir restaurante
+              {t("delete_restaurant")}
             </button>
           </div>
         </div>
