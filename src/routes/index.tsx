@@ -893,7 +893,7 @@ function Index() {
                       onToggleVisited={handleToggleVisited}
                       onDelete={handleDelete}
                       onRate={handleRate}
-                      
+                      onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
                     />
                   ))}
                   {hasMore && (
