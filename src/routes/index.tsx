@@ -44,6 +44,7 @@ import {
   getRestaurants,
   seedDefaultRestaurants,
   geocodeListRestaurants,
+  refreshOpeningHours,
   isAdmin as isAdminFn,
 } from "@/lib/api.functions";
 
