@@ -274,7 +274,7 @@ function Index() {
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredWithOpenNow.length));
         }
       },
       { rootMargin: "400px 0px" }
