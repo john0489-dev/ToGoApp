@@ -724,14 +724,16 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
     const staleCutoff = new Date(Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000).toISOString();
     const { supabase } = context;
 
-    // Pick rows that have coordinates but no fresh hours
+    // Pick rows that have coordinates but no cached hours, or stale hours.
+    // Rows with a recent `hours_updated_at` but NULL `opening_hours` must be
+    // retried during the initial backfill instead of being skipped for 7 days.
     const { data: rows, error } = await supabase
       .from("restaurants")
-      .select("id, name, location, latitude, longitude, place_id, hours_updated_at")
+      .select("id, name, location, address, latitude, longitude, place_id, opening_hours, hours_updated_at")
       .eq("list_id", data.listId)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
-      .or(`hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`)
+      .or(`opening_hours.is.null,hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`)
       .limit(BATCH_SIZE);
 
     if (error) safeError("refreshOpeningHours:fetch", error);
@@ -756,7 +758,7 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
                 "X-Goog-FieldMask": "places.id",
               },
               body: JSON.stringify({
-                textQuery: `${r.name} ${r.location ?? ""}`.trim(),
+                textQuery: `${r.name} ${r.address ?? ""} ${r.location ?? ""}`.trim(),
                 locationBias: {
                   circle: {
                     center: { latitude: r.latitude, longitude: r.longitude },
@@ -854,7 +856,7 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
       .eq("list_id", data.listId)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
-      .or(`hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`);
+      .or(`opening_hours.is.null,hours_updated_at.is.null,hours_updated_at.lt.${staleCutoff}`);
 
     return { processed: pending.length, updated, failed, remaining: remaining ?? 0 };
   });
