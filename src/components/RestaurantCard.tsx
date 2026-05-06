@@ -61,20 +61,14 @@ function RestaurantCardImpl({
             <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
               {restaurant.cuisine}
             </span>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                restaurant.visited
-                  ? "bg-[var(--status-visited)]/15 text-[var(--status-visited)]"
-                  : "bg-[var(--status-to-visit)]/15 text-[var(--status-to-visit)]"
-              }`}
-            >
+            {!restaurant.visited && (
               <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${
-                  restaurant.visited ? "bg-[var(--status-visited)]" : "bg-[var(--status-to-visit)]"
-                }`}
-              />
-              {restaurant.visited ? "Visitado" : "Para Visitar"}
-            </span>
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-[var(--status-to-visit)]/15 text-[var(--status-to-visit)]"
+              >
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--status-to-visit)]" />
+                Para Visitar
+              </span>
+            )}
             {isOpen === true && (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
