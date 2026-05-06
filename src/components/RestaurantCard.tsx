@@ -135,6 +135,7 @@ function RestaurantCardImpl({
         onToggleVisited={onToggleVisited}
         onDelete={onDelete}
         onRate={onRate}
+        onSaveDishFavorite={onSaveDishFavorite}
       />
     </>
   );
