@@ -599,6 +599,54 @@ function Index() {
                   <Users size={16} />
                 </button>
               )}
+              <div className="relative">
+                <button
+                  onClick={() => setLangDropdown((v) => !v)}
+                  className="flex items-center justify-center transition-colors"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    background: "#fff",
+                    border: "1px solid #ede9e3",
+                    borderRadius: 10,
+                    color: "#888",
+                  }}
+                  aria-label={t("language")}
+                >
+                  <Globe size={16} />
+                </button>
+                {langDropdown && (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-1 overflow-hidden"
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #ede9e3",
+                      borderRadius: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                      minWidth: 160,
+                    }}
+                  >
+                    {([
+                      { code: "pt", label: "🇧🇷 Português" },
+                      { code: "en", label: "🇺🇸 English" },
+                      { code: "es", label: "🇪🇸 Español" },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.code}
+                        onClick={() => { changeLanguage(opt.code); setLangDropdown(false); }}
+                        className="block w-full px-3 py-2 text-left text-sm transition-colors"
+                        style={{
+                          color: "#1a1a18",
+                          background: currentLang === opt.code ? "#faf9f7" : "transparent",
+                          fontWeight: currentLang === opt.code ? 500 : 400,
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleLogout}
                 className="flex items-center justify-center transition-colors"
@@ -624,7 +672,7 @@ function Index() {
                   borderRadius: 10,
                   color: "#fff",
                 }}
-                aria-label="Adicionar restaurante"
+                aria-label={t("add_restaurant")}
               >
                 <Plus size={20} />
               </button>
