@@ -257,6 +257,7 @@ function SignupRow({ signup }: { signup: Signup }) {
 // ===== Location Fixer Section =====
 
 type BadLocationRow = { id: string; name: string; location: string };
+type ManualEditMap = Record<string, string>;
 
 function extractBairro(loc: string): string {
   const streetPrefix =
@@ -291,6 +292,26 @@ function LocationFixerSection({
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [doneMsg, setDoneMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [manualEdits, setManualEdits] = useState<ManualEditMap>({});
+  const [savingManual, setSavingManual] = useState<string | null>(null);
+
+  const handleSaveManual = useCallback(async (id: string) => {
+    const newLocation = (manualEdits[id] ?? "").trim();
+    if (!newLocation || !session) return;
+    setSavingManual(id);
+    try {
+      await adminUpdateRestaurantLocation({
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        data: { id, location: newLocation },
+      });
+      setRows((prev) => prev ? prev.filter((r) => r.id !== id) : prev);
+      setManualEdits((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    } catch (err: any) {
+      setError(err?.message ?? "Erro ao salvar.");
+    } finally {
+      setSavingManual(null);
+    }
+  }, [session, manualEdits]);
 
   const handleSearch = useCallback(async () => {
     if (!session) return;
@@ -414,7 +435,22 @@ function LocationFixerSection({
                     {canFix ? (
                       <p className="mt-0.5 text-[10px] text-primary">→ {bairro}</p>
                     ) : (
-                      <p className="mt-0.5 text-[10px] text-amber-600 dark:text-amber-400">⚠ Revisão manual necessária</p>
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={manualEdits[r.id] ?? ""}
+                          onChange={(e) => setManualEdits((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                          placeholder="Digite o bairro correto..."
+                          className="flex-1 rounded-md border border-amber-400/50 bg-amber-50/50 px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-amber-500 dark:bg-amber-900/10"
+                        />
+                        <button
+                          onClick={() => handleSaveManual(r.id)}
+                          disabled={!manualEdits[r.id]?.trim() || savingManual === r.id}
+                          className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-emerald-700 disabled:opacity-40 dark:text-emerald-300"
+                        >
+                          {savingManual === r.id ? "..." : "Salvar"}
+                        </button>
+                      </div>
                     )}
                   </li>
                 );
