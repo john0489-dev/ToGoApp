@@ -952,7 +952,8 @@ type DetectItem = {
   suggested_country: string | null;
 };
 
-export const adminDetectInternational = createServerFn({ method: "POST" })
+// List candidates only — actual AI detection runs per-batch from the client
+export const adminListInternationalCandidates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
@@ -964,7 +965,7 @@ export const adminDetectInternational = createServerFn({ method: "POST" })
       .or("country.is.null,country.eq.")
       .order("name", { ascending: true });
 
-    if (error) safeError("adminDetectInternational", error);
+    if (error) safeError("adminListInternationalCandidates", error);
 
     const candidates = (rows ?? []).map((r) => ({
       id: r.id,
@@ -972,9 +973,29 @@ export const adminDetectInternational = createServerFn({ method: "POST" })
       location: r.location ?? "",
     }));
 
-    if (candidates.length === 0) {
-      return { international: [] as DetectItem[], total: 0 };
-    }
+    return { candidates, total: candidates.length };
+  });
+
+// Process a single batch of candidates with the AI (15s timeout)
+export const adminDetectInternationalBatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      candidates: z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            location: z.string(),
+          })
+        )
+        .min(1)
+        .max(50),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurado.");
@@ -995,21 +1016,16 @@ Responda SOMENTE em JSON, nesse formato exato:
 ]
 
 Restaurantes:
-${JSON.stringify(candidates, null, 2)}`;
+${JSON.stringify(data.candidates, null, 2)}`;
 
-    // Process in batches to keep responses within token limits
-    const BATCH = 40;
-    const international: DetectItem[] = [];
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
 
-    for (let i = 0; i < candidates.length; i += BATCH) {
-      const chunk = candidates.slice(i, i + BATCH);
-      const chunkPrompt = prompt.replace(
-        JSON.stringify(candidates, null, 2),
-        JSON.stringify(chunk, null, 2)
-      );
-
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    let resp: Response;
+    try {
+      resp = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           "x-api-key": apiKey,
@@ -1018,39 +1034,43 @@ ${JSON.stringify(candidates, null, 2)}`;
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 4000,
-          messages: [{ role: "user", content: chunkPrompt }],
+          messages: [{ role: "user", content: prompt }],
         }),
       });
+    } catch (err: any) {
+      clearTimeout(timer);
+      if (err?.name === "AbortError") throw new Error("Timeout na IA (15s)");
+      throw err;
+    }
+    clearTimeout(timer);
 
-      if (!resp.ok) {
-        const t = await resp.text();
-        console.error("Anthropic error", resp.status, t);
-        throw new Error(`Erro na IA (${resp.status})`);
-      }
-
-      const json = (await resp.json()) as { content?: Array<{ type: string; text?: string }> };
-      const text =
-        json.content?.filter((c) => c.type === "text" && c.text).map((c) => c.text as string).join("\n") ?? "";
-
-      // Extract JSON array from response
-      const match = text.match(/\[[\s\S]*\]/);
-      if (!match) {
-        console.error("No JSON array in AI response:", text);
-        continue;
-      }
-      try {
-        const parsed = JSON.parse(match[0]) as DetectItem[];
-        for (const item of parsed) {
-          if (item && item.is_international && item.suggested_country) {
-            international.push(item);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse AI JSON", e);
-      }
+    if (!resp.ok) {
+      const t = await resp.text();
+      console.error("Anthropic error", resp.status, t);
+      throw new Error(`Erro na IA (${resp.status})`);
     }
 
-    return { international, total: candidates.length };
+    const json = (await resp.json()) as { content?: Array<{ type: string; text?: string }> };
+    const text =
+      json.content?.filter((c) => c.type === "text" && c.text).map((c) => c.text as string).join("\n") ?? "";
+
+    const match = text.match(/\[[\s\S]*\]/);
+    if (!match) {
+      console.error("No JSON array in AI response:", text);
+      return { international: [] as DetectItem[] };
+    }
+    const international: DetectItem[] = [];
+    try {
+      const parsed = JSON.parse(match[0]) as DetectItem[];
+      for (const item of parsed) {
+        if (item && item.is_international && item.suggested_country) {
+          international.push(item);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse AI JSON", e);
+    }
+    return { international };
   });
 
 export const adminUpdateRestaurantCountry = createServerFn({ method: "POST" })
