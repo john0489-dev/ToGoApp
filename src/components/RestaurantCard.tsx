@@ -46,7 +46,7 @@ function RestaurantCardImpl({
               <h3 className="text-base font-semibold text-card-foreground truncate">
                 {restaurant.name}
               </h3>
-              <p className="text-sm text-muted-foreground truncate">{restaurant.location}</p>
+              <p className="text-sm text-muted-foreground truncate">{formatLocation(restaurant.location, restaurant.country)}</p>
             </div>
             <button
               onClick={(e) => {
