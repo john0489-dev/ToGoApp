@@ -4,11 +4,13 @@ import { CheckCircle2, Circle, MapPin, Trash2, ExternalLink, Calendar, User, X }
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
+import { formatLocation } from "@/lib/format-location";
 
 export type RestaurantDetails = {
   id: string;
   name: string;
   location: string;
+  country?: string | null;
   cuisine: string;
   visited: boolean;
   rating: number;
@@ -267,7 +269,7 @@ export function RestaurantDetailsDialog({
                 {t("location_label")}
               </p>
               <p className="text-sm mt-0.5" style={{ color: "#1a1a18" }}>
-                {restaurant.location || "—"}
+                {formatLocation(restaurant.location, restaurant.country) || "—"}
               </p>
               {restaurant.address && (
                 <p className="text-sm mt-1" style={{ color: "#888" }}>

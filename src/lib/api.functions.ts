@@ -195,6 +195,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
       price_range: z.enum(["$", "$$", "$$$", "$$$$"]).optional(),
       occasion: z.string().max(100).optional(),
       visited_at: z.string().datetime().optional(),
+      country: z.string().max(100).optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -221,6 +222,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
       address: data.address ?? null,
       latitude: data.latitude ?? null,
       longitude: data.longitude ?? null,
+      country: data.country && data.country.trim() ? data.country.trim() : null,
       added_by: userId,
     };
 
@@ -276,6 +278,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
       occasion: z.string().max(100).optional(),
       dish_favorite: z.string().max(100).optional(),
       price_range: z.enum(["$", "$$", "$$$", "$$$$"]).optional(),
+      country: z.string().max(100).nullable().optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -293,6 +296,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
     if (data.occasion !== undefined) update.occasion = data.occasion;
     if (data.dish_favorite !== undefined) update.dish_favorite = data.dish_favorite;
     if (data.price_range !== undefined) update.price_range = data.price_range;
+    if (data.country !== undefined) update.country = data.country && data.country.trim() ? data.country.trim() : null;
 
     const { error } = await supabase
       .from("restaurants")

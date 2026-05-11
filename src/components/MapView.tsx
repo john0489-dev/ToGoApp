@@ -5,11 +5,13 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
+import { formatLocation } from "@/lib/format-location";
 
 type Restaurant = {
   id: string;
   name: string;
   location: string;
+  country?: string | null;
   cuisine: string;
   visited: boolean;
   rating: number;
@@ -233,7 +235,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
               ${escapeHtml(m.name)}
             </div>
             <div style="font-size: 12px; color: #6b6760; margin-bottom: 8px;">
-              ${escapeHtml(m.location || "")}${m.location && m.cuisine ? " • " : ""}${escapeHtml(m.cuisine || "")}
+              ${escapeHtml(formatLocation(m.location, m.country))}${m.location && m.cuisine ? " • " : ""}${escapeHtml(m.cuisine || "")}
             </div>
             <button
               data-restaurant-id="${m.id}"

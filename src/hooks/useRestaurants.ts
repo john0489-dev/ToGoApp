@@ -11,6 +11,7 @@ export type Restaurant = {
   id: string;
   name: string;
   location: string;
+  country?: string | null;
   cuisine: string;
   visited: boolean;
   rating: number;
@@ -36,6 +37,7 @@ export type AddRestaurantInput = {
   address?: string;
   latitude?: number;
   longitude?: number;
+  country?: string;
 };
 
 export function useRestaurants(activeListId: string | null, accessToken: string | undefined) {

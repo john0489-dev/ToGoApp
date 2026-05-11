@@ -357,6 +357,7 @@ function Index() {
     address?: string;
     latitude?: number;
     longitude?: number;
+    country?: string;
   }) => {
     if (!activeListId || !session) return;
     if (plan === "free" && limits.restaurants !== null && usage.restaurants >= limits.restaurants) {
@@ -372,6 +373,7 @@ function Index() {
         address: data.address,
         latitude: data.latitude,
         longitude: data.longitude,
+        country: data.country,
       });
       refreshPlan();
     } catch (err: any) {
