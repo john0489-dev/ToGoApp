@@ -201,9 +201,27 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    // If user typed location manually (no Google Places selection),
+    // try to extract just the neighbourhood/bairro
+    let finalLocation = location.trim();
+    if (!selectedAddress && finalLocation) {
+      const parts = finalLocation
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      // If it looks like a full address (starts with "Rua", "Av", "R.", etc.)
+      const looksLikeStreet = /^(rua|av|avenida|r\.?|al|alameda|travessa|estrada|rod|rodovia)\s/i.test(parts[0] || "");
+      if (looksLikeStreet && parts.length > 1) {
+        // Skip the street part, take the next meaningful parts (bairro, cidade)
+        const meaningful = parts.slice(1).filter((p) => !/^\d+$/.test(p) && p.length > 2);
+        finalLocation = meaningful.slice(0, 2).join(", ");
+      }
+    }
+
     onAdd({
       name: name.trim(),
-      location: location.trim(),
+      location: finalLocation,
       cuisine,
       address: selectedAddress?.address,
       latitude: selectedAddress?.lat,
