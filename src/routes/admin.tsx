@@ -410,3 +410,179 @@ function LocationFixerSection({
     </section>
   );
 }
+
+// ===== International Detector Section =====
+
+type IntlItem = {
+  id: string;
+  name: string;
+  location: string;
+  is_international: boolean;
+  suggested_country: string | null;
+};
+
+function InternationalDetectorSection({
+  session,
+}: {
+  session: { access_token: string } | null;
+}) {
+  const [analyzing, setAnalyzing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [items, setItems] = useState<IntlItem[] | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
+  const [doneMsg, setDoneMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAnalyze = useCallback(async () => {
+    if (!session) return;
+    setAnalyzing(true);
+    setError(null);
+    setDoneMsg(null);
+    try {
+      const { international, total } = await adminDetectInternational({
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setItems(international as IntlItem[]);
+      setTotal(total);
+    } catch (err: any) {
+      setError(err?.message ?? "Erro ao analisar.");
+    } finally {
+      setAnalyzing(false);
+    }
+  }, [session]);
+
+  const confirmOne = useCallback(
+    async (item: IntlItem) => {
+      if (!session || !item.suggested_country) return;
+      try {
+        await adminUpdateRestaurantCountry({
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          data: { id: item.id, country: item.suggested_country },
+        });
+        setItems((prev) => (prev ? prev.filter((i) => i.id !== item.id) : prev));
+      } catch (err: any) {
+        setError(err?.message ?? "Erro ao salvar.");
+      }
+    },
+    [session]
+  );
+
+  const ignoreOne = useCallback((id: string) => {
+    setItems((prev) => (prev ? prev.filter((i) => i.id !== id) : prev));
+  }, []);
+
+  const confirmAll = useCallback(async () => {
+    if (!session || !items || items.length === 0) return;
+    setSaving(true);
+    setError(null);
+    let ok = 0;
+    for (const item of items) {
+      if (!item.suggested_country) continue;
+      try {
+        await adminUpdateRestaurantCountry({
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          data: { id: item.id, country: item.suggested_country },
+        });
+        ok++;
+      } catch (err) {
+        console.error("confirm country failed", item.id, err);
+      }
+    }
+    setDoneMsg(`${ok} países confirmados!`);
+    setItems([]);
+    setSaving(false);
+  }, [session, items]);
+
+  return (
+    <section className="mt-8 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <Globe2 size={16} className="text-primary" />
+        <h2 className="text-base font-semibold text-foreground">Detectar Restaurantes Internacionais</h2>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Usa IA para identificar restaurantes fora do Brasil entre os que ainda não têm país definido.
+      </p>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={handleAnalyze}
+          disabled={analyzing || saving}
+          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {analyzing ? "Analisando..." : "Analisar lista"}
+        </button>
+      </div>
+
+      {doneMsg && (
+        <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+          {doneMsg}
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {error}
+        </div>
+      )}
+
+      {items !== null && total === 0 && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Todos os restaurantes já têm país definido ✓
+        </p>
+      )}
+
+      {items !== null && total !== null && total > 0 && items.length === 0 && !doneMsg && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Nenhum restaurante internacional identificado entre {total} sem país.
+        </p>
+      )}
+
+      {items && items.length > 0 && (
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              {items.length} internacional{items.length === 1 ? "" : "is"} identificado{items.length === 1 ? "" : "s"}
+            </p>
+            <button
+              onClick={confirmAll}
+              disabled={saving}
+              className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary disabled:opacity-50"
+            >
+              {saving ? "Salvando..." : "Confirmar todos"}
+            </button>
+          </div>
+          <ul className="space-y-1.5 max-h-96 overflow-y-auto">
+            {items.map((it) => (
+              <li
+                key={it.id}
+                className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground truncate">{it.name}</p>
+                  <p className="mt-0.5 text-muted-foreground truncate">{it.location}</p>
+                  <p className="mt-0.5 text-[10px] text-primary">→ {it.suggested_country}</p>
+                </div>
+                <button
+                  onClick={() => confirmOne(it)}
+                  className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-1.5 text-emerald-700 dark:text-emerald-300"
+                  aria-label="Confirmar"
+                  title="Confirmar"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  onClick={() => ignoreOne(it.id)}
+                  className="rounded-md border border-border bg-background p-1.5 text-muted-foreground"
+                  aria-label="Ignorar"
+                  title="Ignorar"
+                >
+                  <X size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
