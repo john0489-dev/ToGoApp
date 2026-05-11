@@ -5,11 +5,13 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
+import { formatLocation } from "@/lib/format-location";
 
 type Restaurant = {
   id: string;
   name: string;
   location: string;
+  country?: string | null;
   cuisine: string;
   visited: boolean;
   rating: number;
