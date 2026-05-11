@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2, CheckCircle2, Circle } from "lucide-react";
 import { RestaurantDetailsDialog, type RestaurantDetails } from "./RestaurantDetailsDialog";
+import { formatLocation } from "@/lib/format-location";
 
 interface RestaurantCardProps {
   restaurant: RestaurantDetails;
