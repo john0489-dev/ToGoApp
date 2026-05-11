@@ -208,17 +208,11 @@ function Index() {
       .catch(() => setIsUserAdmin(false));
   }, [accessToken]);
 
-  // When filters are active, show filtered counts; otherwise show total
-  const isFiltered = deferredSearch.trim() !== "" || statusFilter !== "all" || cuisineFilter.length > 0 ||
-    advancedFilters.openNow || advancedFilters.minRating > 0 ||
-    (advancedFilters.tags && advancedFilters.tags.length > 0);
-
-  const totalCount = isFiltered ? filtered.length : restaurants.length;
-  const visitedCount = useMemo(() => 
-    isFiltered 
-      ? filtered.filter((r) => r.visited).length 
-      : restaurants.filter((r) => r.visited).length,
-    [filtered, restaurants, isFiltered]
+  // Counters always reflect the currently filtered list (equals total when no filters active)
+  const totalCount = filtered.length;
+  const visitedCount = useMemo(
+    () => filtered.filter((r) => r.visited).length,
+    [filtered]
   );
   const toVisitCount = totalCount - visitedCount;
 
