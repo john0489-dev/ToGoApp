@@ -149,7 +149,7 @@ export function useRestaurants(activeListId: string | null, accessToken: string 
   );
 
   const updateRestaurant = useCallback(
-    async (id: string, patch: { rating?: number; visited?: boolean; dish_favorite?: string; notes?: string }) => {
+    async (id: string, patch: { rating?: number; visited?: boolean; dish_favorite?: string; notes?: string; tags?: string[] }) => {
       const token = tokenRef.current;
       if (!token) return;
       setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));

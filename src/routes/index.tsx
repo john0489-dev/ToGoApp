@@ -1112,6 +1112,7 @@ function Index() {
           onDelete={(id: string) => { handleDelete(id); setDetailsRestaurantId(null); }}
           onRate={handleRate}
           onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
+          onSaveTags={(id, tags) => updateRestaurantAction(id, { tags })}
         />
       )}
       <InstallGuideDialog open={installGuideOpen} onOpenChange={setInstallGuideOpen} />

@@ -23,6 +23,7 @@ export type RestaurantDetails = {
   photos?: string[] | null;
   dish_favorite?: string | null;
   notes?: string | null;
+  tags?: string[] | null;
 };
 
 interface Props {
@@ -34,6 +35,7 @@ interface Props {
   onRate: (id: string, rating: number) => void;
   onPhotosChange?: (id: string, photos: string[]) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
+  onSaveTags?: (id: string, tags: string[]) => void;
 }
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
@@ -46,14 +48,33 @@ export function RestaurantDetailsDialog({
   onDelete,
   onRate,
   onSaveDishFavorite,
+  onSaveTags,
 }: Props) {
   const { t } = useTranslation();
   const [addedByEmail, setAddedByEmail] = useState<string | null>(null);
   const [dishFavorite, setDishFavorite] = useState<string>(restaurant.dish_favorite ?? "");
+  const [tags, setTags] = useState<string[]>(restaurant.tags ?? []);
+  const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
     setDishFavorite(restaurant.dish_favorite ?? "");
-  }, [restaurant.id, restaurant.dish_favorite]);
+    setTags(restaurant.tags ?? []);
+  }, [restaurant.id, restaurant.dish_favorite, restaurant.tags]);
+
+  const handleAddTag = () => {
+    const tag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!tag || tags.includes(tag) || tags.length >= 20) return;
+    const next = [...tags, tag];
+    setTags(next);
+    setTagInput("");
+    onSaveTags?.(restaurant.id, next);
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    const next = tags.filter((t) => t !== tag);
+    setTags(next);
+    onSaveTags?.(restaurant.id, next);
+  };
 
   useEffect(() => {
     if (!open || !restaurant.added_by || !restaurant.list_id) {
@@ -307,6 +328,56 @@ export function RestaurantDetailsDialog({
                   )}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div
+            className="rounded-2xl p-3"
+            style={{ background: "#fff", border: "1px solid #ede9e3" }}
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#888" }}>
+              Tags
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                  style={{ background: "#faf9f7", border: "1px solid #ede9e3", color: "#1a1a18" }}
+                >
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 transition-colors"
+                    aria-label={`Remover tag ${tag}`}
+                  >
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                placeholder="Nova tag..."
+                maxLength={40}
+                className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
+                style={{ background: "#faf9f7", border: "1px solid #ede9e3", color: "#1a1a18" }}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                disabled={!tagInput.trim()}
+                className="rounded-xl px-3 py-2 text-xs font-medium disabled:opacity-40 transition-colors"
+                style={{ background: "#1a1a18", color: "#fff" }}
+              >
+                +
+              </button>
             </div>
           </div>
 
