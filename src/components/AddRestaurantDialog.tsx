@@ -22,6 +22,7 @@ interface AddRestaurantDialogProps {
     address?: string;
     latitude?: number;
     longitude?: number;
+    country?: string;
   }) => void;
 }
 
