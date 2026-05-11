@@ -26,12 +26,16 @@ interface AddRestaurantDialogProps {
 }
 
 const CUISINE_OPTIONS = [
-  "Árabe", "Argentino", "Bar", "Bar de Vinhos", "Brasileiro", "Café",
-  "Chinês", "Coreano", "Doceria", "Espanhol", "Francês", "Grego",
-  "Hamburgueria", "Indiano", "Italiano", "Japonês", "Mediterrâneo",
-  "Mexicano", "Padaria", "Peruano", "Pizzaria", "Português",
-  "Sorveteria", "Steakhouse", "Sushi", "Tailandês", "Vegano",
-  "Vegetariano", "Vietnamita", "Outro"
+  "Árabe", "Argentino", "Bar", "Bar de Vinhos", "Bistrô", "Boteco",
+  "Brasileiro", "Brunch", "Café", "Churrascaria", "Chinês", "Colombiano",
+  "Contemporâneo", "Coreano", "Delivery", "Doceria", "Espanhol",
+  "Frutos do Mar", "Francês", "Grego", "Hamburgueria", "Indiano",
+  "Israelense", "Italiano", "Izakaya", "Japonês", "Lebânes",
+  "Mediterrâneo", "Mexicano", "Nórdico", "Padaria", "Peruano",
+  "Pizzaria", "Português", "Ramen", "Sanduíche", "Sobremesa",
+  "Sorveteria", "Steakhouse", "Sushi", "Tailandês", "Tapas",
+  "Tex-Mex", "Turco", "Variado", "Vegano", "Vegetariano",
+  "Vietnamita", "Outro"
 ];
 
 async function searchPlaces(query: string): Promise<PlaceResult[]> {
