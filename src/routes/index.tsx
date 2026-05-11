@@ -163,7 +163,7 @@ function Index() {
     availableTags,
     availableNeighborhoods,
     filteredRestaurants: filtered,
-  } = useFilters(restaurants);
+  } = useFilters(restaurants, activeListId);
 
   const [tab, setTab] = useState<Tab>("list");
   const [mountedTabs, setMountedTabs] = useState<{ location: boolean; nearme: boolean }>({ location: false, nearme: false });

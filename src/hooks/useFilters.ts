@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   EMPTY_ADVANCED_FILTERS,
   countActiveFilters,
@@ -9,11 +9,19 @@ import { isOpenNow } from "@/lib/openingHours";
 
 export type StatusFilter = "all" | "visited" | "to-visit";
 
-export function useFilters(restaurants: Restaurant[]) {
+export function useFilters(restaurants: Restaurant[], activeListId?: string | null) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(EMPTY_ADVANCED_FILTERS);
+
+  // Reset all filters whenever the active list changes
+  useEffect(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setCuisineFilter([]);
+    setAdvancedFilters(EMPTY_ADVANCED_FILTERS);
+  }, [activeListId]);
 
   const deferredSearch = useDeferredValue(search);
 
