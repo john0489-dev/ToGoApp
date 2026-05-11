@@ -185,6 +185,8 @@ function AdminPage() {
               ))}
             </ul>
           )}
+
+          <LocationFixerSection session={session} />
         </div>
       </main>
     </div>
