@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
@@ -864,4 +865,75 @@ export const refreshOpeningHours = createServerFn({ method: "POST" })
       );
 
     return { processed: pending.length, updated, failed, remaining: remaining ?? 0 };
+  });
+
+// ===== Admin: Fix restaurant locations =====
+
+async function assertAdmin(supabase: DB, userId: string) {
+  const { data, error } = await supabase.rpc("has_role", {
+    _user_id: userId,
+    _role: "admin",
+  });
+  if (error || !data) throw new Error("Acesso negado.");
+}
+
+// List restaurants whose `location` looks like a full street address
+export const adminListBadLocations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { data, error } = await supabaseAdmin
+      .from("restaurants")
+      .select("id, name, location")
+      .or(
+        [
+          "location.ilike.Rua %",
+          "location.ilike.Av %",
+          "location.ilike.Avenida %",
+          "location.ilike.Al %",
+          "location.ilike.R. %",
+          "location.ilike.Estrada %",
+          "location.ilike.Praça %",
+          "location.ilike.Pça %",
+        ].join(",")
+      )
+      .order("name", { ascending: true });
+
+    if (error) safeError("adminListBadLocations", error);
+
+    // Also include rows with a "number,". Supabase PostgREST doesn't support
+    // regex in or(), so we do a second pass and merge results.
+    const { data: numbered } = await supabaseAdmin
+      .from("restaurants")
+      .select("id, name, location")
+      .ilike("location", "%, %");
+
+    const merged = new Map<string, { id: string; name: string; location: string }>();
+    for (const r of data ?? []) merged.set(r.id, r as any);
+    const numRe = /\d+,/;
+    for (const r of numbered ?? []) {
+      if (numRe.test(r.location ?? "")) merged.set(r.id, r as any);
+    }
+
+    const list = Array.from(merged.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return { restaurants: list };
+  });
+
+// Update a single restaurant's location (admin only)
+export const adminUpdateRestaurantLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), location: z.string().min(1).max(200) }))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { error } = await supabaseAdmin
+      .from("restaurants")
+      .update({ location: data.location })
+      .eq("id", data.id);
+
+    if (error) safeError("adminUpdateRestaurantLocation", error);
+    return { ok: true };
   });

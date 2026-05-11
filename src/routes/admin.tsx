@@ -1,8 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { ArrowLeft, RefreshCw, Users, Calendar, TrendingUp } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Calendar, TrendingUp, MapPin, Wand2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { getAdminSignups, isAdmin as isAdminFn } from "@/lib/api.functions";
+import {
+  getAdminSignups,
+  isAdmin as isAdminFn,
+  adminListBadLocations,
+  adminUpdateRestaurantLocation,
+} from "@/lib/api.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -180,6 +185,8 @@ function AdminPage() {
               ))}
             </ul>
           )}
+
+          <LocationFixerSection session={session} />
         </div>
       </main>
     </div>
@@ -240,5 +247,163 @@ function SignupRow({ signup }: { signup: Signup }) {
         <span className="shrink-0">{relativeTime(signup.created_at)}</span>
       </div>
     </li>
+  );
+}
+
+// ===== Location Fixer Section =====
+
+type BadLocationRow = { id: string; name: string; location: string };
+
+function extractBairro(loc: string): string {
+  const parts = loc
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const streetPrefix =
+    /^(rua|av\.?|avenida|al\.?|alameda|r\.|estrada|praça|praca|pça\.?|pca\.?|travessa|rod\.?|rodovia|largo)\s/i;
+  for (const p of parts) {
+    if (/^\d/.test(p)) continue;
+    if (streetPrefix.test(p)) continue;
+    return p;
+  }
+  return parts[0] ?? loc;
+}
+
+function LocationFixerSection({
+  session,
+}: {
+  session: { access_token: string } | null;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [fixing, setFixing] = useState(false);
+  const [rows, setRows] = useState<BadLocationRow[] | null>(null);
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
+  const [doneMsg, setDoneMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSearch = useCallback(async () => {
+    if (!session) return;
+    setLoading(true);
+    setError(null);
+    setDoneMsg(null);
+    try {
+      const { restaurants } = await adminListBadLocations({
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setRows(restaurants as BadLocationRow[]);
+    } catch (err: any) {
+      setError(err?.message ?? "Erro ao buscar.");
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
+
+  const handleFix = useCallback(async () => {
+    if (!session || !rows || rows.length === 0) return;
+    setFixing(true);
+    setError(null);
+    setDoneMsg(null);
+    let corrected = 0;
+    setProgress({ current: 0, total: rows.length });
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const bairro = extractBairro(r.location);
+      if (bairro && bairro !== r.location) {
+        try {
+          await adminUpdateRestaurantLocation({
+            headers: { Authorization: `Bearer ${session.access_token}` },
+            data: { id: r.id, location: bairro },
+          });
+          corrected++;
+        } catch (err) {
+          console.error("fix location failed", r.id, err);
+        }
+      }
+      setProgress({ current: i + 1, total: rows.length });
+    }
+    setDoneMsg(`${corrected} localizações corrigidas!`);
+    setFixing(false);
+    setProgress(null);
+    // Refresh list
+    try {
+      const { restaurants } = await adminListBadLocations({
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setRows(restaurants as BadLocationRow[]);
+    } catch {
+      // ignore
+    }
+  }, [session, rows]);
+
+  return (
+    <section className="mt-8 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <MapPin size={16} className="text-primary" />
+        <h2 className="text-base font-semibold text-foreground">Corrigir localizações</h2>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Encontra restaurantes onde a localização contém endereço completo e substitui pelo bairro.
+      </p>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={handleSearch}
+          disabled={loading || fixing}
+          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {loading ? "Buscando..." : "Buscar localizações com endereço completo"}
+        </button>
+        {rows && rows.length > 0 && (
+          <button
+            onClick={handleFix}
+            disabled={fixing || loading}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary disabled:opacity-50"
+          >
+            <Wand2 size={14} />
+            {fixing ? "Corrigindo..." : "Corrigir automaticamente"}
+          </button>
+        )}
+      </div>
+
+      {progress && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Corrigindo {progress.current}/{progress.total}...
+        </p>
+      )}
+
+      {doneMsg && (
+        <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+          {doneMsg}
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {error}
+        </div>
+      )}
+
+      {rows && (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-muted-foreground">
+            {rows.length} restaurante{rows.length === 1 ? "" : "s"} encontrado{rows.length === 1 ? "" : "s"}
+          </p>
+          {rows.length > 0 && (
+            <ul className="mt-2 space-y-1.5 max-h-96 overflow-y-auto">
+              {rows.map((r) => (
+                <li
+                  key={r.id}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-xs"
+                >
+                  <p className="font-medium text-foreground truncate">{r.name}</p>
+                  <p className="mt-0.5 text-muted-foreground truncate">{r.location}</p>
+                  <p className="mt-0.5 text-[10px] text-primary">→ {extractBairro(r.location)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
