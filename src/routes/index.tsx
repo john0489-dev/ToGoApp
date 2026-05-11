@@ -209,9 +209,8 @@ function Index() {
   }, [accessToken]);
 
   // When filters are active, show filtered counts; otherwise show total
-  const isFiltered = deferredSearch.trim() !== "" || statusFilter !== "all" || cuisineFilter !== "all" || 
-    advancedFilters.openNow || advancedFilters.minRating > 0 || 
-    (advancedFilters.priceRange && advancedFilters.priceRange.length > 0) ||
+  const isFiltered = deferredSearch.trim() !== "" || statusFilter !== "all" || cuisineFilter.length > 0 ||
+    advancedFilters.openNow || advancedFilters.minRating > 0 ||
     (advancedFilters.tags && advancedFilters.tags.length > 0);
 
   const totalCount = isFiltered ? filtered.length : restaurants.length;
