@@ -288,9 +288,11 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
       address: selectedAddress?.address,
       latitude: selectedAddress?.lat,
       longitude: selectedAddress?.lon,
+      country: country.trim() || undefined,
     });
     setName("");
     setLocation("");
+    setCountry("");
     setCuisine("Bar");
     setSelectedAddress(null);
     setResults([]);
