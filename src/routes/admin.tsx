@@ -259,18 +259,25 @@ function SignupRow({ signup }: { signup: Signup }) {
 type BadLocationRow = { id: string; name: string; location: string };
 
 function extractBairro(loc: string): string {
+  const streetPrefix =
+    /^(rua|av\.?|avenida|al\.?|alameda|r\.|estrada|praça|praca|pça\.?|pca\.?|travessa|trav\.?|rod\.?|rodovia|largo)\s/i;
+
   const parts = loc
     .split(",")
     .map((p) => p.trim())
     .filter(Boolean);
-  const streetPrefix =
-    /^(rua|av\.?|avenida|al\.?|alameda|r\.|estrada|praça|praca|pça\.?|pca\.?|travessa|rod\.?|rodovia|largo)\s/i;
+
+  // Single part that is a street address — no bairro extractable
+  if (parts.length === 1 && streetPrefix.test(parts[0])) return "";
+
   for (const p of parts) {
-    if (/^\d/.test(p)) continue;
-    if (streetPrefix.test(p)) continue;
+    if (/^\d/.test(p)) continue;        // skip parts starting with a digit
+    if (streetPrefix.test(p)) continue; // skip street-prefixed parts
     return p;
   }
-  return parts[0] ?? loc;
+
+  // All parts were streets/numbers — no bairro found
+  return "";
 }
 
 function LocationFixerSection({
@@ -325,7 +332,7 @@ function LocationFixerSection({
       }
       setProgress({ current: i + 1, total: rows.length });
     }
-    setDoneMsg(`${corrected} localizações corrigidas!`);
+    setDoneMsg(`${corrected} localizações corrigidas!${rows.length - corrected > 0 ? ` ${rows.length - corrected} precisam de revisão manual.` : ""}`);
     setFixing(false);
     setProgress(null);
     // Refresh list
@@ -394,16 +401,24 @@ function LocationFixerSection({
           </p>
           {rows.length > 0 && (
             <ul className="mt-2 space-y-1.5 max-h-96 overflow-y-auto">
-              {rows.map((r) => (
-                <li
-                  key={r.id}
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-xs"
-                >
-                  <p className="font-medium text-foreground truncate">{r.name}</p>
-                  <p className="mt-0.5 text-muted-foreground truncate">{r.location}</p>
-                  <p className="mt-0.5 text-[10px] text-primary">→ {extractBairro(r.location)}</p>
-                </li>
-              ))}
+              {rows.map((r) => {
+                const bairro = extractBairro(r.location);
+                const canFix = bairro !== "" && bairro !== r.location;
+                return (
+                  <li
+                    key={r.id}
+                    className="rounded-lg border border-border bg-background px-3 py-2 text-xs"
+                  >
+                    <p className="font-medium text-foreground truncate">{r.name}</p>
+                    <p className="mt-0.5 text-muted-foreground truncate">{r.location}</p>
+                    {canFix ? (
+                      <p className="mt-0.5 text-[10px] text-primary">→ {bairro}</p>
+                    ) : (
+                      <p className="mt-0.5 text-[10px] text-amber-600 dark:text-amber-400">⚠ Revisão manual necessária</p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
