@@ -941,3 +941,130 @@ export const adminUpdateRestaurantLocation = createServerFn({ method: "POST" })
     if (error) safeError("adminUpdateRestaurantLocation", error);
     return { ok: true };
   });
+
+// ===== Admin: Detect international restaurants =====
+
+type DetectItem = {
+  id: string;
+  name: string;
+  location: string;
+  is_international: boolean;
+  suggested_country: string | null;
+};
+
+export const adminDetectInternational = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("restaurants")
+      .select("id, name, location, country")
+      .or("country.is.null,country.eq.")
+      .order("name", { ascending: true });
+
+    if (error) safeError("adminDetectInternational", error);
+
+    const candidates = (rows ?? []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      location: r.location ?? "",
+    }));
+
+    if (candidates.length === 0) {
+      return { international: [] as DetectItem[], total: 0 };
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurado.");
+
+    const prompt = `Você é um assistente que identifica a origem geográfica de bairros e localidades. Para cada restaurante abaixo, analise o campo 'location' e determine:
+1. Esse lugar é no Brasil? (sim/não)
+2. Se não for no Brasil, qual é o país provável?
+
+Responda SOMENTE em JSON, nesse formato exato:
+[
+  {
+    "id": "...",
+    "name": "...",
+    "location": "...",
+    "is_international": true/false,
+    "suggested_country": "nome do país em português ou null"
+  }
+]
+
+Restaurantes:
+${JSON.stringify(candidates, null, 2)}`;
+
+    // Process in batches to keep responses within token limits
+    const BATCH = 40;
+    const international: DetectItem[] = [];
+
+    for (let i = 0; i < candidates.length; i += BATCH) {
+      const chunk = candidates.slice(i, i + BATCH);
+      const chunkPrompt = prompt.replace(
+        JSON.stringify(candidates, null, 2),
+        JSON.stringify(chunk, null, 2)
+      );
+
+      const resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4000,
+          messages: [{ role: "user", content: chunkPrompt }],
+        }),
+      });
+
+      if (!resp.ok) {
+        const t = await resp.text();
+        console.error("Anthropic error", resp.status, t);
+        throw new Error(`Erro na IA (${resp.status})`);
+      }
+
+      const json = (await resp.json()) as { content?: Array<{ type: string; text?: string }> };
+      const text =
+        json.content?.filter((c) => c.type === "text" && c.text).map((c) => c.text as string).join("\n") ?? "";
+
+      // Extract JSON array from response
+      const match = text.match(/\[[\s\S]*\]/);
+      if (!match) {
+        console.error("No JSON array in AI response:", text);
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(match[0]) as DetectItem[];
+        for (const item of parsed) {
+          if (item && item.is_international && item.suggested_country) {
+            international.push(item);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse AI JSON", e);
+      }
+    }
+
+    return { international, total: candidates.length };
+  });
+
+export const adminUpdateRestaurantCountry = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), country: z.string().min(1).max(100) }))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { error } = await supabaseAdmin
+      .from("restaurants")
+      .update({ country: data.country })
+      .eq("id", data.id);
+
+    if (error) safeError("adminUpdateRestaurantCountry", error);
+    return { ok: true };
+  });
