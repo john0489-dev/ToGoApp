@@ -781,7 +781,7 @@ function Index() {
               </p>
               <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>
                 {totalCount}
-                {isFiltered && <span style={{ fontSize: 11, color: "#c4844a", marginLeft: 3 }}>▼</span>}
+                {filtered.length !== restaurants.length && <span style={{ fontSize: 11, color: "#c4844a", marginLeft: 3 }}>▼</span>}
               </p>
             </div>
             <div className="text-center" style={{ borderLeft: "1px solid #ede9e3", borderRight: "1px solid #ede9e3" }}>
