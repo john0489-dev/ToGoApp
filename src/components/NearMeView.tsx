@@ -139,7 +139,7 @@ export function NearMeView({ restaurants, onToggleVisited }: NearMeViewProps) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">{r.name}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {r.cuisine} • {r.location}
+                  {r.cuisine} • {formatLocation(r.location, r.country)}
                 </p>
               </div>
               <div className="shrink-0 text-right">
