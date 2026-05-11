@@ -108,8 +108,13 @@ export const Route = createFileRoute("/api/maps/autocomplete")({
             const findComp = (...types: string[]) =>
               comps.find((c) => c.types?.some((t) => types.includes(t)))
                 ?.longText ?? "";
+            // Priority: sublocality_level_1 → neighborhood → sublocality →
+            // admin_area_level_2 → locality. Falls back to first address part
+            // after the street on the client side.
             const neighbourhood =
-              findComp("sublocality", "sublocality_level_1", "neighborhood") ||
+              findComp("sublocality_level_1") ||
+              findComp("neighborhood") ||
+              findComp("sublocality") ||
               findComp("administrative_area_level_2") ||
               findComp("locality") ||
               "";

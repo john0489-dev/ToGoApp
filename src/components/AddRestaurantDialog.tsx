@@ -102,6 +102,16 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const cuisineReqIdRef = useRef(0);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
 
+  // Location autocomplete state (parallel to name search)
+  const [locResults, setLocResults] = useState<PlaceResult[]>([]);
+  const [locSearching, setLocSearching] = useState(false);
+  const [locShowDropdown, setLocShowDropdown] = useState(false);
+  const [locHasSearched, setLocHasSearched] = useState(false);
+  const locDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locReqIdRef = useRef(0);
+  const locWrapperRef = useRef<HTMLDivElement>(null);
+  const locSuppressRef = useRef(false);
+
   // Click outside to close dropdown
   useEffect(() => {
     if (!showDropdown) return;
@@ -113,6 +123,52 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [showDropdown]);
+
+  // Click outside for location dropdown
+  useEffect(() => {
+    if (!locShowDropdown) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (locWrapperRef.current && !locWrapperRef.current.contains(e.target as Node)) {
+        setLocShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [locShowDropdown]);
+
+  // Debounced autocomplete for the location field
+  useEffect(() => {
+    if (locDebounceRef.current) clearTimeout(locDebounceRef.current);
+    if (locSuppressRef.current) {
+      locSuppressRef.current = false;
+      return;
+    }
+    const q = location.trim();
+    if (q.length < 3) {
+      setLocResults([]);
+      setLocShowDropdown(false);
+      setLocHasSearched(false);
+      return;
+    }
+    locDebounceRef.current = setTimeout(async () => {
+      const myReq = ++locReqIdRef.current;
+      setLocSearching(true);
+      try {
+        const res = await searchPlaces(q);
+        if (myReq !== locReqIdRef.current) return;
+        setLocResults(res);
+        setLocHasSearched(true);
+        setLocShowDropdown(true);
+      } catch (err) {
+        console.error("places search failed", err);
+      } finally {
+        if (myReq === locReqIdRef.current) setLocSearching(false);
+      }
+    }, 300);
+    return () => {
+      if (locDebounceRef.current) clearTimeout(locDebounceRef.current);
+    };
+  }, [location]);
 
   const fetchCuisineSuggestion = async (n: string, addr: string) => {
     if (cuisineManual) return;
@@ -377,17 +433,116 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
             )}
           </div>
 
-          <div>
+          <div ref={locWrapperRef} style={{ position: "relative" }}>
             <label className="block text-sm font-medium text-card-foreground mb-1">
               {t("location")}
             </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Bairro, cidade ou endereço"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  if (selectedAddress) setSelectedAddress(null);
+                }}
+                onFocus={() => { if (locResults.length > 0) setLocShowDropdown(true); }}
+                placeholder="Bairro ou cidade"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                autoComplete="off"
+              />
+              {locSearching && (
+                <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin" style={{ color: "#c4944a" }} />
+              )}
+            </div>
+
+            {locShowDropdown && locResults.length > 0 && (
+              <div
+                className="overflow-y-auto"
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                  marginTop: 4,
+                  maxHeight: 240,
+                  background: "#fff",
+                  border: "1px solid #ede9e3",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                }}
+              >
+                <ul>
+                  {locResults.map((r, i) => {
+                    const bairro = shortAddress(r) || r.address;
+                    return (
+                      <li
+                        key={i}
+                        style={{
+                          borderBottom: i < locResults.length - 1 ? "1px solid #f5f2ee" : "none",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Fill name only if empty so user-typed name is preserved
+                            if (!name.trim()) setName(r.name);
+                            locSuppressRef.current = true;
+                            setLocation(bairro);
+                            const lat = r.lat ? parseFloat(r.lat) : NaN;
+                            const lon = r.lon ? parseFloat(r.lon) : NaN;
+                            setSelectedAddress({
+                              address: r.address,
+                              lat: Number.isFinite(lat) ? lat : 0,
+                              lon: Number.isFinite(lon) ? lon : 0,
+                            });
+                            setLocShowDropdown(false);
+                            void fetchCuisineSuggestion(name || r.name, bairro);
+                          }}
+                          className="w-full text-left transition-colors flex items-start gap-3"
+                          style={{ padding: "12px 16px", background: "transparent" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#faf9f7")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <MapPin size={16} style={{ color: "#c4944a", marginTop: 2, flexShrink: 0 }} />
+                          <div className="min-w-0 flex-1">
+                            <div style={{ fontSize: "14px", fontWeight: 600, color: "#1a1a18" }}>
+                              {bairro}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#aaa", marginTop: 2 }} className="truncate">
+                              {r.name}
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {locShowDropdown && locHasSearched && !locSearching && locResults.length === 0 && (
+              <div
+                className="text-center"
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                  marginTop: 4,
+                  background: "#fff",
+                  border: "1px solid #ede9e3",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  padding: "16px",
+                  fontSize: "13px",
+                  color: "#999",
+                }}
+              >
+                Nenhum resultado encontrado
+              </div>
+            )}
           </div>
 
           <div>
