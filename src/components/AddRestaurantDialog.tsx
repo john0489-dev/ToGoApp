@@ -93,6 +93,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
+  const [country, setCountry] = useState("");
   const [cuisine, setCuisine] = useState("Bar");
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [searching, setSearching] = useState(false);
