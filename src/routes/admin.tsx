@@ -561,6 +561,20 @@ function InternationalDetectorSection({
         </button>
       </div>
 
+      {analyzing && total !== null && total > 0 && (
+        <div className="mt-3">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-primary/15">
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${Math.min(100, (processed / total) * 100)}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            Analisando {Math.min(processed, total)} de {total} restaurantes...
+          </p>
+        </div>
+      )}
+
       {doneMsg && (
         <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
           {doneMsg}
@@ -573,13 +587,13 @@ function InternationalDetectorSection({
         </div>
       )}
 
-      {items !== null && total === 0 && (
+      {!analyzing && items !== null && total === 0 && (
         <p className="mt-4 text-xs text-muted-foreground">
           Todos os restaurantes já têm país definido ✓
         </p>
       )}
 
-      {items !== null && total !== null && total > 0 && items.length === 0 && !doneMsg && (
+      {!analyzing && items !== null && total !== null && total > 0 && items.length === 0 && !doneMsg && (
         <p className="mt-4 text-xs text-muted-foreground">
           Nenhum restaurante internacional identificado entre {total} sem país.
         </p>
