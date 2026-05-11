@@ -75,7 +75,13 @@ function shortAddress(p: PlaceResult): string {
     const city = parts.find((x) => x && x !== p.neighbourhood && x !== p.name);
     return city ? `${p.neighbourhood}, ${city}` : p.neighbourhood;
   }
-  return parts.slice(1, 3).join(", ");
+  // No neighbourhood — try to extract bairro/district from address parts
+  // Skip the street (parts[0]) and try to find a meaningful location part
+  const meaningfulParts = parts.slice(1).filter((p) => {
+    // Skip parts that look like street numbers, CEPs or generic terms
+    return p && !/^\d+$/.test(p) && p.length > 2;
+  });
+  return meaningfulParts.slice(0, 2).join(", ");
 }
 
 export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialogProps) {
