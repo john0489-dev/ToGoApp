@@ -269,7 +269,7 @@ export function RestaurantDetailsDialog({
                 {t("location_label")}
               </p>
               <p className="text-sm mt-0.5" style={{ color: "#1a1a18" }}>
-                {restaurant.location || "—"}
+                {formatLocation(restaurant.location, restaurant.country) || "—"}
               </p>
               {restaurant.address && (
                 <p className="text-sm mt-1" style={{ color: "#888" }}>
