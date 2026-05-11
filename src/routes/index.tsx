@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings } from "lucide-react";
+import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings, Star } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { isOpenNow } from "@/lib/openingHours";
@@ -113,6 +113,17 @@ function Index() {
   const accessToken = session?.access_token;
   const userId = user?.id;
 
+  // Default list — persisted per user in localStorage
+  const defaultListKey = userId ? `togo:defaultList:${userId}` : null;
+  const getDefaultListId = () => defaultListKey ? localStorage.getItem(defaultListKey) : null;
+  const saveDefaultListId = (id: string) => { if (defaultListKey) localStorage.setItem(defaultListKey, id); };
+  const [defaultListId, setDefaultListId] = useState<string | null>(() => getDefaultListId());
+
+  const handleSetDefaultList = useCallback((id: string) => {
+    saveDefaultListId(id);
+    setDefaultListId(id);
+  }, [defaultListKey]);
+
   // Lists
   const {
     lists,
@@ -216,13 +227,13 @@ function Index() {
   );
   const toVisitCount = totalCount - visitedCount;
 
-  // Auto-select the first list as soon as lists arrive (if none picked yet).
+  // Auto-select: prefer default list, fallback to first list
   useEffect(() => {
     if (activeListId) return;
-    if (lists.length > 0) {
-      setActiveListId(lists[0].id);
-    }
-  }, [lists, activeListId, setActiveListId]);
+    if (lists.length === 0) return;
+    const preferred = defaultListId && lists.find((l) => l.id === defaultListId);
+    setActiveListId(preferred ? preferred.id : lists[0].id);
+  }, [lists, activeListId, defaultListId, setActiveListId]);
 
   // First-time user with zero lists: create a default list + seed restaurants.
   const defaultListBootstrappedRef = useRef(false);
@@ -726,6 +737,18 @@ function Index() {
                       style={{ color: "#1a1a18", fontWeight: l.id === activeListId ? 500 : 400 }}
                     >
                       {l.name}
+                      {l.id === defaultListId && (
+                        <span className="ml-1.5 text-[10px] text-amber-500 font-normal">padrão</span>
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSetDefaultList(l.id); }}
+                      className="flex h-9 w-9 items-center justify-center rounded transition-colors"
+                      style={{ color: l.id === defaultListId ? "#f59e0b" : "#ccc" }}
+                      aria-label={`Definir ${l.name} como lista padrão`}
+                      title="Definir como lista padrão"
+                    >
+                      <Star size={14} fill={l.id === defaultListId ? "#f59e0b" : "none"} />
                     </button>
                     {l.created_by === user?.id && (
                       <button
