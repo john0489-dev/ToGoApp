@@ -124,6 +124,52 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [showDropdown]);
 
+  // Click outside for location dropdown
+  useEffect(() => {
+    if (!locShowDropdown) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (locWrapperRef.current && !locWrapperRef.current.contains(e.target as Node)) {
+        setLocShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [locShowDropdown]);
+
+  // Debounced autocomplete for the location field
+  useEffect(() => {
+    if (locDebounceRef.current) clearTimeout(locDebounceRef.current);
+    if (locSuppressRef.current) {
+      locSuppressRef.current = false;
+      return;
+    }
+    const q = location.trim();
+    if (q.length < 3) {
+      setLocResults([]);
+      setLocShowDropdown(false);
+      setLocHasSearched(false);
+      return;
+    }
+    locDebounceRef.current = setTimeout(async () => {
+      const myReq = ++locReqIdRef.current;
+      setLocSearching(true);
+      try {
+        const res = await searchPlaces(q);
+        if (myReq !== locReqIdRef.current) return;
+        setLocResults(res);
+        setLocHasSearched(true);
+        setLocShowDropdown(true);
+      } catch (err) {
+        console.error("places search failed", err);
+      } finally {
+        if (myReq === locReqIdRef.current) setLocSearching(false);
+      }
+    }, 300);
+    return () => {
+      if (locDebounceRef.current) clearTimeout(locDebounceRef.current);
+    };
+  }, [location]);
+
   const fetchCuisineSuggestion = async (n: string, addr: string) => {
     if (cuisineManual) return;
     if (!n || n.trim().length < 3) return;
