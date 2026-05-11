@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings, Star } from "lucide-react";
+import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings, Star, Tag } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { isOpenNow } from "@/lib/openingHours";
@@ -933,6 +933,14 @@ function Index() {
                   >
                     <FileDown size={12} />
                     <span>{t("export_pdf")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdvancedSheetOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+                  >
+                    <Tag size={12} />
+                    <span>Tags</span>
                   </button>
                 </>
               ) : (
