@@ -102,6 +102,16 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const cuisineReqIdRef = useRef(0);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
 
+  // Location autocomplete state (parallel to name search)
+  const [locResults, setLocResults] = useState<PlaceResult[]>([]);
+  const [locSearching, setLocSearching] = useState(false);
+  const [locShowDropdown, setLocShowDropdown] = useState(false);
+  const [locHasSearched, setLocHasSearched] = useState(false);
+  const locDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locReqIdRef = useRef(0);
+  const locWrapperRef = useRef<HTMLDivElement>(null);
+  const locSuppressRef = useRef(false);
+
   // Click outside to close dropdown
   useEffect(() => {
     if (!showDropdown) return;
