@@ -278,6 +278,7 @@ export const updateRestaurant = createServerFn({ method: "POST" })
       occasion: z.string().max(100).optional(),
       dish_favorite: z.string().max(100).optional(),
       price_range: z.enum(["$", "$$", "$$$", "$$$$"]).optional(),
+      country: z.string().max(100).nullable().optional(),
     })
   )
   .handler(async ({ data, context }) => {
