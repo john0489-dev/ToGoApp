@@ -4,11 +4,13 @@ import { CheckCircle2, Circle, MapPin, Trash2, ExternalLink, Calendar, User, X }
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
+import { formatLocation } from "@/lib/format-location";
 
 export type RestaurantDetails = {
   id: string;
   name: string;
   location: string;
+  country?: string | null;
   cuisine: string;
   visited: boolean;
   rating: number;
