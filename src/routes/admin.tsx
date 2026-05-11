@@ -1,8 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { ArrowLeft, RefreshCw, Users, Calendar, TrendingUp } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Calendar, TrendingUp, MapPin, Wand2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { getAdminSignups, isAdmin as isAdminFn } from "@/lib/api.functions";
+import {
+  getAdminSignups,
+  isAdmin as isAdminFn,
+  adminListBadLocations,
+  adminUpdateRestaurantLocation,
+} from "@/lib/api.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
