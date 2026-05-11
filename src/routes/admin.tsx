@@ -431,6 +431,7 @@ function InternationalDetectorSection({
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState<IntlItem[] | null>(null);
   const [total, setTotal] = useState<number | null>(null);
+  const [processed, setProcessed] = useState(0);
   const [doneMsg, setDoneMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -439,12 +440,58 @@ function InternationalDetectorSection({
     setAnalyzing(true);
     setError(null);
     setDoneMsg(null);
+    setItems([]);
+    setProcessed(0);
+    setTotal(null);
     try {
-      const { international, total } = await adminDetectInternational({
+      const { candidates, total } = await adminListInternationalCandidates({
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      setItems(international as IntlItem[]);
       setTotal(total);
+      if (total === 0) {
+        setAnalyzing(false);
+        return;
+      }
+
+      const BATCH_SIZE = 20;
+      const CONCURRENCY = 3;
+      const batches: Array<typeof candidates> = [];
+      for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+        batches.push(candidates.slice(i, i + BATCH_SIZE));
+      }
+
+      const runBatch = async (batch: typeof candidates): Promise<IntlItem[]> => {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const { international } = await adminDetectInternationalBatch({
+              headers: { Authorization: `Bearer ${session.access_token}` },
+              data: { candidates: batch },
+            });
+            return international as IntlItem[];
+          } catch (err) {
+            console.error(`batch attempt ${attempt + 1} failed`, err);
+            if (attempt === 1) return [];
+          }
+        }
+        return [];
+      };
+
+      let cursor = 0;
+      const worker = async () => {
+        while (cursor < batches.length) {
+          const idx = cursor++;
+          const batch = batches[idx];
+          const found = await runBatch(batch);
+          if (found.length > 0) {
+            setItems((prev) => [...(prev ?? []), ...found]);
+          }
+          setProcessed((p) => p + batch.length);
+        }
+      };
+
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, batches.length) }, () => worker())
+      );
     } catch (err: any) {
       setError(err?.message ?? "Erro ao analisar.");
     } finally {
