@@ -235,7 +235,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
               ${escapeHtml(m.name)}
             </div>
             <div style="font-size: 12px; color: #6b6760; margin-bottom: 8px;">
-              ${escapeHtml(m.location || "")}${m.location && m.cuisine ? " • " : ""}${escapeHtml(m.cuisine || "")}
+              ${escapeHtml(formatLocation(m.location, m.country))}${m.location && m.cuisine ? " • " : ""}${escapeHtml(m.cuisine || "")}
             </div>
             <button
               data-restaurant-id="${m.id}"
