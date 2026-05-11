@@ -554,6 +554,20 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-card-foreground mb-1">
+              País (deixe vazio para Brasil)
+            </label>
+            <input
+              type="text"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="Ex: Japão, Coreia do Sul, Espanha"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
             <div className="flex items-center gap-2 mb-1">
               <label className="block text-sm font-medium text-card-foreground">{t("cuisine")}</label>
               {cuisineLoading && (
