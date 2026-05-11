@@ -222,6 +222,7 @@ export const addRestaurant = createServerFn({ method: "POST" })
       address: data.address ?? null,
       latitude: data.latitude ?? null,
       longitude: data.longitude ?? null,
+      country: data.country && data.country.trim() ? data.country.trim() : null,
       added_by: userId,
     };
 
