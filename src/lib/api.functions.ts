@@ -888,66 +888,30 @@ export const adminListBadLocations = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
 
-    // Fetch restaurants whose location starts with a street prefix
+    // Fetch all restaurants and filter in JS to avoid PostgREST comma-parsing issues
     const { data, error } = await supabaseAdmin
       .from("restaurants")
       .select("id, name, location")
-      .or(
-        [
-          "location.ilike.Rua %",
-          "location.ilike.Av %",
-          "location.ilike.Avenida %",
-          "location.ilike.Al %",
-          "location.ilike.Al. %",
-          "location.ilike.Alameda %",
-          "location.ilike.R. %",
-          "location.ilike.Estrada %",
-          "location.ilike.Praça %",
-          "location.ilike.Pça %",
-          "location.ilike.Trav. %",
-          "location.ilike.Travessa %",
-          "location.ilike.Rod. %",
-          "location.ilike.Rodovia %",
-          "location.ilike.Largo %",
-        ].join(",")
-      )
+      .not("location", "is", null)
       .order("name", { ascending: true });
 
     if (error) safeError("adminListBadLocations", error);
 
-    // Also fetch locations that contain ", R." or ", Rua" or ", Av" patterns
-    // (e.g. "Vila Olímpia, R. Chilon" or "Pompeia, Rua X")
-    const { data: withStreetAfterComma } = await supabaseAdmin
-      .from("restaurants")
-      .select("id, name, location")
-      .or(
-        [
-          "location.ilike.%, R. %",
-          "location.ilike.%, Rua %",
-          "location.ilike.%, Av %",
-          "location.ilike.%, Avenida %",
-          "location.ilike.%, Al. %",
-          "location.ilike.%, Alameda %",
-          "location.ilike.%, Trav. %",
-          "location.ilike.%, Estrada %",
-        ].join(",")
-      );
+    const streetPrefix =
+      /^(rua|av\.?|avenida|al\.?|alameda|r\.|estrada|praça|praca|pça\.?|pca\.?|travessa|trav\.?|rod\.?|rodovia|largo)\s/i;
 
-    // Also include rows with a digit followed by comma (e.g. "Bairro, 374")
-    const { data: numbered } = await supabaseAdmin
-      .from("restaurants")
-      .select("id, name, location")
-      .ilike("location", "%, %");
+    const hasStreetAnywhere = (loc: string) => {
+      // Starts with a street prefix
+      if (streetPrefix.test(loc.trim())) return true;
+      // Contains ", StreetPrefix " after a comma
+      const parts = loc.split(",").map((p) => p.trim());
+      if (parts.length > 1 && parts.some((p) => streetPrefix.test(p))) return true;
+      // Contains a number followed by comma (e.g. "Bairro, 374")
+      if (/\d+,/.test(loc)) return true;
+      return false;
+    };
 
-    const merged = new Map<string, { id: string; name: string; location: string }>();
-    for (const r of data ?? []) merged.set(r.id, r as any);
-    for (const r of withStreetAfterComma ?? []) merged.set(r.id, r as any);
-    const numRe = /\d+,/;
-    for (const r of numbered ?? []) {
-      if (numRe.test(r.location ?? "")) merged.set(r.id, r as any);
-    }
-
-    const list = Array.from(merged.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const list = (data ?? []).filter((r) => hasStreetAnywhere(r.location ?? ""));
     return { restaurants: list };
   });
 
