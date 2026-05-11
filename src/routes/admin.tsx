@@ -7,7 +7,8 @@ import {
   isAdmin as isAdminFn,
   adminListBadLocations,
   adminUpdateRestaurantLocation,
-  adminDetectInternational,
+  adminListInternationalCandidates,
+  adminDetectInternationalBatch,
   adminUpdateRestaurantCountry,
 } from "@/lib/api.functions";
 
