@@ -11,6 +11,7 @@ export type Restaurant = {
   id: string;
   name: string;
   location: string;
+  country?: string | null;
   cuisine: string;
   visited: boolean;
   rating: number;
