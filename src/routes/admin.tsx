@@ -189,6 +189,7 @@ function AdminPage() {
           )}
 
           <LocationFixerSection session={session} />
+          <InternationalDetectorSection session={session} />
         </div>
       </main>
     </div>
