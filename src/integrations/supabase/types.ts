@@ -326,6 +326,7 @@ export type Database = {
         Row: {
           added_by: string | null
           address: string | null
+          country: string | null
           created_at: string
           cuisine: string
           dish_favorite: string | null
@@ -352,6 +353,7 @@ export type Database = {
         Insert: {
           added_by?: string | null
           address?: string | null
+          country?: string | null
           created_at?: string
           cuisine?: string
           dish_favorite?: string | null
@@ -378,6 +380,7 @@ export type Database = {
         Update: {
           added_by?: string | null
           address?: string | null
+          country?: string | null
           created_at?: string
           cuisine?: string
           dish_favorite?: string | null
