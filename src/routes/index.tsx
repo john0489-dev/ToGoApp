@@ -738,7 +738,7 @@ function Index() {
                     >
                       {l.name}
                       {l.id === defaultListId && (
-                        <span className="ml-1.5 text-[10px] text-amber-500 font-normal">padrão</span>
+                        <span className="ml-1.5 text-[10px] text-amber-500 font-normal">principal</span>
                       )}
                     </button>
                     <button
