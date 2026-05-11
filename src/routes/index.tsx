@@ -208,8 +208,19 @@ function Index() {
       .catch(() => setIsUserAdmin(false));
   }, [accessToken]);
 
-  const totalCount = restaurants.length;
-  const visitedCount = useMemo(() => restaurants.filter((r) => r.visited).length, [restaurants]);
+  // When filters are active, show filtered counts; otherwise show total
+  const isFiltered = deferredSearch.trim() !== "" || statusFilter !== "all" || cuisineFilter !== "all" || 
+    advancedFilters.openNow || advancedFilters.minRating > 0 || 
+    (advancedFilters.priceRange && advancedFilters.priceRange.length > 0) ||
+    (advancedFilters.tags && advancedFilters.tags.length > 0);
+
+  const totalCount = isFiltered ? filtered.length : restaurants.length;
+  const visitedCount = useMemo(() => 
+    isFiltered 
+      ? filtered.filter((r) => r.visited).length 
+      : restaurants.filter((r) => r.visited).length,
+    [filtered, restaurants, isFiltered]
+  );
   const toVisitCount = totalCount - visitedCount;
 
   // Auto-select the first list as soon as lists arrive (if none picked yet).
@@ -773,7 +784,10 @@ function Index() {
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
                 {t("total")}
               </p>
-              <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{totalCount}</p>
+              <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>
+                {totalCount}
+                {isFiltered && <span style={{ fontSize: 11, color: "#c4844a", marginLeft: 3 }}>▼</span>}
+              </p>
             </div>
             <div className="text-center" style={{ borderLeft: "1px solid #ede9e3", borderRight: "1px solid #ede9e3" }}>
               <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
