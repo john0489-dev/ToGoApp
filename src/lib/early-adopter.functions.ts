@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "./_middleware";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Get current early adopter slot count and eligibility
@@ -7,20 +7,18 @@ import { requireSupabaseAuth } from "./_middleware";
 export const getEarlyAdopterStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, user } = context;
+    const { userId } = context;
+    const supabase = context.supabase as any;
 
-    // Get total count
-    const { data: countData } = await supabase
-      .rpc("get_early_adopter_count");
+    const { data: countData } = await supabase.rpc("get_early_adopter_count");
 
-    const totalClaimed = countData ?? 0;
+    const totalClaimed = Number(countData ?? 0);
     const slotsLeft = Math.max(0, 100 - totalClaimed);
 
-    // Check if this user already claimed
     const { data: existing } = await supabase
       .from("early_adopters")
       .select("slot_number, trial_ends_at, activated_at")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     return {
@@ -37,14 +35,18 @@ export const getEarlyAdopterStatus = createServerFn({ method: "GET" })
 export const activateEarlyAdopterTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, user } = context;
+    const { userId } = context;
+    const supabase = context.supabase as any;
 
-    const { data: slotNumber, error } = await supabase
-      .rpc("activate_early_adopter_trial", { p_user_id: user.id });
+    const { data, error } = await supabase.rpc("activate_early_adopter_trial", {
+      p_user_id: userId,
+    });
 
     if (error) {
       throw new Error("Não foi possível ativar o trial. Tente novamente.");
     }
+
+    const slotNumber = Number(data);
 
     if (slotNumber === -1) {
       throw new Error("Você já ativou o período gratuito anteriormente.");

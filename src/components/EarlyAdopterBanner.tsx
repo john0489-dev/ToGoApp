@@ -17,7 +17,7 @@ export function EarlyAdopterBanner({ plan, onActivated }: { plan: string; onActi
     const dismissedUntil = localStorage.getItem(DISMISSED_KEY);
     if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) return;
 
-    getEarlyAdopterStatus().then((s) => {
+    getEarlyAdopterStatus().then((s: any) => {
       setStatus(s);
       if (s.isAvailable && !s.userClaimed) setVisible(true);
     }).catch(() => {});
