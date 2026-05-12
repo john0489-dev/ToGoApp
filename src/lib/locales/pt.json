@@ -151,5 +151,14 @@
   "theme_light": "Claro (padrão)",
   "yes": "Sim",
   "cuisine_all": "Todas",
-  "cuisine_selected": "selecionadas"
+  "cuisine_selected": "selecionadas",
+  "chef_ai_placeholder": "Com vontade de quê?",
+  "chef_ai_typing": "Chef AI está digitando",
+  "send_btn": "Enviar",
+  "early_adopter_badge": "OFERTA ESPECIAL",
+  "early_adopter_title": "Você pode ser um dos primeiros 100!",
+  "early_adopter_slots": "vagas restantes",
+  "early_adopter_cta": "✨ Ativar agora — é grátis",
+  "early_adopter_dismiss": "Agora não",
+  "trial_active_until": "Trial Pro ativo até"
 }

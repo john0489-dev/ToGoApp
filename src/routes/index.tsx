@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings, Star, Tag } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { RestaurantCard } from "@/components/RestaurantCard";
+import { EarlyAdopterBanner } from "@/components/EarlyAdopterBanner";
 import { isOpenNow } from "@/lib/openingHours";
 import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
 import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
@@ -834,6 +835,10 @@ function Index() {
       <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
         {/* List tab — always mounted */}
         <div className={tab === "list" ? "px-4 py-3 space-y-3" : "hidden"}>
+            <EarlyAdopterBanner
+              plan={plan}
+              onActivated={() => window.location.reload()}
+            />
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input

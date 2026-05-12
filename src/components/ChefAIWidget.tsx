@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Sparkles, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -27,7 +28,8 @@ const QUICK_PROMPTS: { emoji: string; label: string; prompt: string }[] = [
   { emoji: "🆕", label: "Lugar novo", prompt: "Sugira um lugar novo que eu ainda não conheço" },
 ];
 
-export function ChefAIWidget({ restaurants }: Props) {
+export function ChefAIWidget({
+  const { t } = useTranslation(); restaurants }: Props) {
   const [open, setOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(true);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
@@ -226,7 +228,7 @@ export function ChefAIWidget({ restaurants }: Props) {
                 <div
                   className="rounded-2xl px-3 py-2.5"
                   style={{ background: "#fff", border: "1px solid #ede9e3" }}
-                  aria-label="Chef AI está digitando"
+                  aria-label={t("chef_ai_typing", { defaultValue: "Chef AI está digitando" })}
                 >
                   <div className="flex items-center gap-1">
                     <Dot delay={0} />
@@ -253,7 +255,7 @@ export function ChefAIWidget({ restaurants }: Props) {
                   send(input);
                 }
               }}
-              placeholder="Com vontade de quê?"
+              placeholder={t("chef_ai_placeholder", { defaultValue: "Com vontade de quê?" })}
               disabled={loading}
               className="flex-1 rounded-full px-3.5 py-2 text-sm outline-none transition-colors disabled:opacity-50"
               style={{ background: "#faf9f7", border: "1px solid #ede9e3", color: "#1a1a18" }}
@@ -262,7 +264,7 @@ export function ChefAIWidget({ restaurants }: Props) {
               type="button"
               onClick={() => send(input)}
               disabled={loading || !input.trim()}
-              aria-label="Enviar"
+              aria-label={t("send_btn", { defaultValue: "Enviar" })}
               className="flex h-9 w-9 items-center justify-center rounded-full transition-transform active:scale-95 disabled:opacity-40"
               style={{ background: "linear-gradient(135deg, #d4a855, #c4844a)" }}
             >
