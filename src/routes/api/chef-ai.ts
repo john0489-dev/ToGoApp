@@ -52,6 +52,8 @@ export const Route = createFileRoute("/api/chef-ai")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const auth = await requireAuthFromRequest(request);
+          if (!auth.ok) return auth.response;
           const ip = getClientIp(request);
           if (!checkRateLimit(`chef-ai:${ip}`, 20, 60_000)) {
             return Response.json(
