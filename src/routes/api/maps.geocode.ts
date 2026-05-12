@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuthFromRequest } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/api/maps/geocode")({
   server: {
