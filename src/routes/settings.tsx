@@ -280,7 +280,7 @@ function SettingsPage() {
       >
         <div className="mx-auto max-w-lg">
           <button
-            onClick={() => navigate({ to: "/", search: { list: undefined } })}
+            onClick={() => navigate({ to: "/dashboard", search: { list: undefined } })}
             className="flex items-center justify-center transition-colors"
             style={{
               width: 36,
