@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { authFetch } from "@/lib/auth-fetch";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
