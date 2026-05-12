@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Loader2, Sparkles, Search, MapPin } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface PlaceResult {
   name: string;
