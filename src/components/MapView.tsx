@@ -5,6 +5,7 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
+import { authFetch } from "@/lib/auth-fetch";
 import { formatLocation } from "@/lib/format-location";
 
 type Restaurant = {
