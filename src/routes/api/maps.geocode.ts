@@ -5,6 +5,8 @@ export const Route = createFileRoute("/api/maps/geocode")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const auth = await requireAuthFromRequest(request);
+        if (!auth.ok) return auth.response;
         // Prefer a server-only key without referrer restrictions for Geocoding.
         const apiKey = process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_KEY;
         if (!apiKey) {
