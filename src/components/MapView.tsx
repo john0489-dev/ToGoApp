@@ -55,7 +55,7 @@ let loaderPromise: Promise<typeof google> | null = null;
 async function loadGoogleMaps(): Promise<typeof google> {
   if (loaderPromise) return loaderPromise;
   loaderPromise = (async () => {
-    const res = await fetch("/api/maps/config", { credentials: "same-origin" });
+    const res = await authFetch("/api/maps/config", { credentials: "same-origin" });
     if (!res.ok) throw new Error("Failed to fetch maps config");
     const { apiKey } = (await res.json()) as { apiKey: string };
     setOptions({
