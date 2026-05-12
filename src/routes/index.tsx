@@ -1,1131 +1,610 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { Plus, Search, List, MapPin, Navigation, LogOut, Users, ChevronDown, Trash2, Shield, Settings, Star, Tag } from "lucide-react";
-import { lazy, Suspense } from "react";
-import { RestaurantCard } from "@/components/RestaurantCard";
-import { EarlyAdopterBanner } from "@/components/EarlyAdopterBanner";
-import { isOpenNow } from "@/lib/openingHours";
-import { RestaurantDetailsDialog } from "@/components/RestaurantDetailsDialog";
-import { AddRestaurantDialog } from "@/components/AddRestaurantDialog";
-import { InviteDialog } from "@/components/InviteDialog";
-import { PWAInstallBanner } from "@/components/PWAInstallBanner";
-import { InstallGuideDialog } from "@/components/InstallGuideDialog";
-import { InstallSuccessDialog } from "@/components/InstallSuccessDialog";
-import { usePWABanner } from "@/hooks/usePWABanner";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { usePlan } from "@/hooks/usePlan";
-import { useUpgradeModal } from "@/hooks/useUpgradeModal";
-import { useLists } from "@/hooks/useLists";
-import { useRestaurants } from "@/hooks/useRestaurants";
-import { useFilters, type StatusFilter } from "@/hooks/useFilters";
-import { supabase } from "@/integrations/supabase/client";
-
-import { ProLockBadge } from "@/components/ProLockBadge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AdvancedFiltersSheet } from "@/components/AdvancedFiltersSheet";
-import { SlidersHorizontal, FileDown } from "lucide-react";
-import type { ExportPdfOptionsValue } from "@/components/ExportPdfDialog";
-import type { ExportSection, ExportRestaurant } from "@/lib/exportPdf";
-import { toast } from "sonner";
-
-declare global {
-  interface WindowEventMap {
-    "togo:open-restaurant": CustomEvent<{ id: string }>;
-  }
-}
-
-const LazyMapView = lazy(() => import("@/components/MapView").then(m => ({ default: m.MapView })));
-const LazyNearMeView = lazy(() => import("@/components/NearMeView").then(m => ({ default: m.NearMeView })));
-const LazyExportPdfDialog = lazy(() => import("@/components/ExportPdfDialog").then(m => ({ default: m.ExportPdfDialog })));
-const LazyChefAIWidget = lazy(() => import("@/components/ChefAIWidget").then(m => ({ default: m.ChefAIWidget })));
-
-const PAGE_SIZE = 20;
-import {
-  getRestaurants,
-  seedDefaultRestaurants,
-  geocodeListRestaurants,
-  refreshOpeningHours,
-  isAdmin as isAdminFn,
-} from "@/lib/api.functions";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    list: typeof search.list === "string" ? search.list : undefined,
-  }),
   head: () => ({
     meta: [
-      { title: "To Go — Sua lista pessoal de restaurantes" },
-      { name: "description", content: "Gerencie sua lista pessoal de restaurantes e bares para visitar." },
-    ],
-    links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap",
-      },
+      { title: "To Go — Nunca mais esqueça onde queria ir" },
+      { name: "description", content: "Salve restaurantes, organize por listas, veja no mapa e compartilhe com quem você ama." },
+      { property: "og:title", content: "To Go — Nunca mais esqueça onde queria ir" },
+      { property: "og:description", content: "Salve restaurantes, organize por listas, veja no mapa e compartilhe com quem você ama." },
     ],
   }),
-  component: IndexWrapper,
+  component: LandingPage,
 });
 
-type Tab = "list" | "location" | "nearme";
-type ListItem = {
-  id: string;
-  name: string;
-  created_by: string;
-};
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap');
 
-function IndexWrapper() {
-  const { isAuthenticated, loading } = useAuth();
+  .lp-root {
+    font-family: 'DM Sans', sans-serif;
+    background: #f5f0e8;
+    color: #1a1a18;
+    overflow-x: hidden;
+  }
+
+  .lp-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(245,240,232,0.96);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid #e0d8cc;
+  }
+  .lp-nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700; color: #1a1a18;
+    text-decoration: none; cursor: pointer; background: none; border: none;
+  }
+  .lp-nav-logo span { color: #c4844a; }
+  .lp-nav-actions { display: flex; align-items: center; gap: 12px; }
+  .lp-nav-login {
+    background: transparent; color: #1a1a18;
+    border: 1.5px solid #e0d8cc; padding: 9px 20px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: border-color .2s, background .2s;
+  }
+  .lp-nav-login:hover { border-color: #c4844a; background: #fdf5ed; }
+  .lp-nav-btn {
+    background: #1a1a18; color: #fff;
+    border: none; padding: 10px 24px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .2s, transform .15s;
+  }
+  .lp-nav-btn:hover { background: #c4844a; transform: translateY(-1px); }
+
+  .lp-hero-wrap { background: #f5f0e8; padding-top: 80px; }
+  .lp-hero {
+    max-width: 1160px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: center; gap: 60px;
+    padding: 80px 48px 100px;
+  }
+  .lp-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fdf5ed; border: 1px solid #f0d8be;
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 13px; font-weight: 500; color: #c4844a;
+    margin-bottom: 24px;
+  }
+  .lp-h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px, 5vw, 58px);
+    font-weight: 700; line-height: 1.1;
+    color: #1a1a18; letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .lp-h1 em { color: #c4844a; font-style: italic; }
+  .lp-sub {
+    font-size: 18px; color: #5a5a54;
+    line-height: 1.6; margin-bottom: 36px; max-width: 460px;
+  }
+  .lp-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+  .lp-btn-primary {
+    background: #c4844a; color: #fff;
+    padding: 14px 28px; border-radius: 100px;
+    font-size: 16px; font-weight: 500; border: none;
+    cursor: pointer; transition: background .2s, transform .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .lp-btn-primary:hover { background: #b5753e; transform: translateY(-2px); }
+  .lp-btn-secondary {
+    background: transparent; color: #1a1a18;
+    padding: 14px 28px; border-radius: 100px;
+    font-size: 16px; font-weight: 500;
+    border: 1.5px solid #e0d8cc; cursor: pointer;
+    transition: border-color .2s, background .2s;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .lp-btn-secondary:hover { border-color: #c4844a; background: #fdf5ed; }
+  .lp-stats {
+    display: flex; gap: 32px; margin-top: 48px;
+    padding-top: 32px; border-top: 1px solid #e0d8cc;
+  }
+  .lp-stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700; color: #c4844a;
+  }
+  .lp-stat-label { font-size: 13px; color: #5a5a54; margin-top: 2px; }
+
+  .lp-visual { position: relative; display: flex; justify-content: center; }
+  .lp-blob {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: .35; z-index: 1;
+  }
+  .lp-blob-1 { width: 300px; height: 300px; background: #e8a870; top: -40px; right: -40px; }
+  .lp-blob-2 { width: 200px; height: 200px; background: #a8c49a; bottom: 20px; left: -20px; }
+  .lp-phone {
+    width: 260px; background: #fff; border-radius: 36px;
+    box-shadow: 0 40px 80px rgba(0,0,0,.14), 0 0 0 1px rgba(0,0,0,.06);
+    overflow: hidden; position: relative; z-index: 2;
+  }
+  .lp-phone-bar {
+    background: #f5f0e8; padding: 16px 20px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .lp-phone-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; }
+  .lp-phone-add {
+    width: 28px; height: 28px; background: #c4844a;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; color: #fff; font-size: 18px; line-height: 1;
+  }
+  .lp-phone-list { padding: 8px 12px 16px; background: #f5f0e8; }
+  .lp-phone-card {
+    background: #fff; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .lp-pc-icon { font-size: 22px; }
+  .lp-pc-name { font-size: 13px; font-weight: 600; color: #1a1a18; }
+  .lp-pc-loc  { font-size: 11px; color: #5a5a54; margin-top: 2px; }
+  .lp-pc-tag  {
+    margin-left: auto; font-size: 10px; font-weight: 500;
+    padding: 3px 8px; border-radius: 100px; white-space: nowrap;
+  }
+  .tag-want  { background: #fef3e2; color: #c4844a; }
+  .tag-visit { background: #e8f4ea; color: #4a8c55; }
+  .tag-fav   { background: #fce8e8; color: #c44a4a; }
+  .lp-float {
+    position: absolute; z-index: 3; background: #fff; border-radius: 14px;
+    padding: 10px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.12); font-size: 12px;
+  }
+  .lp-float-left  { left: -50px; top: 35%; }
+  .lp-float-right { right: -55px; bottom: 28%; }
+  .lp-fc-label { font-size: 10px; color: #5a5a54; margin-bottom: 2px; }
+  .lp-fc-val   { font-weight: 600; color: #1a1a18; }
+
+  .lp-problem-wrap { background: #1a1a18; }
+  .lp-problem { max-width: 1160px; margin: 0 auto; padding: 90px 48px; }
+  .lp-problem .lp-sec-eye { color: #e8a870; }
+  .lp-problem h2 { color: #fff; margin-bottom: 16px; }
+  .lp-problem > p { color: #aaa; font-size: 17px; line-height: 1.7; max-width: 560px; margin-bottom: 56px; }
+  .lp-p-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+  .lp-p-card {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px; padding: 28px 24px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .lp-p-icon  { font-size: 28px; flex-shrink: 0; }
+  .lp-p-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+  .lp-p-desc  { font-size: 13px; color: #888; line-height: 1.5; }
+
+  .lp-feat-wrap { background: #f5f0e8; }
+  .lp-feat { max-width: 1160px; margin: 0 auto; padding: 90px 48px; }
+  .lp-feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 48px; }
+  .lp-feat-card {
+    background: #fff; border-radius: 20px; padding: 28px 24px;
+    border: 1px solid #e0d8cc;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .lp-feat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.08); }
+  .lp-feat-card.wide { grid-column: span 2; }
+  .lp-feat-emoji { font-size: 32px; margin-bottom: 16px; }
+  .lp-feat-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; margin-bottom:8px; }
+  .lp-feat-desc  { font-size: 14px; color: #5a5a54; line-height: 1.6; }
+
+  .lp-how-wrap { background: #ede9df; }
+  .lp-how { max-width: 900px; margin: 0 auto; padding: 90px 48px; text-align: center; }
+  .lp-how h2 { margin-bottom: 56px; }
+  .lp-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; }
+  .lp-step { position: relative; }
+  .lp-step-num {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #c4844a; color: #fff;
+    font-family:'Playfair Display',serif; font-size:20px; font-weight:700;
+    display: flex; align-items:center; justify-content:center;
+    margin: 0 auto 20px;
+  }
+  .lp-step-title { font-size:16px; font-weight:600; margin-bottom:8px; }
+  .lp-step-desc  { font-size:14px; color:#5a5a54; line-height:1.6; }
+  .lp-step-arrow { position:absolute; top:24px; right:-20px; font-size:20px; color:#e8a870; }
+
+  .lp-testi-wrap { background: #fff; }
+  .lp-testi { max-width: 1160px; margin: 0 auto; padding: 90px 48px; }
+  .lp-testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 48px; }
+  .lp-t-card {
+    background: #f5f0e8; border-radius: 20px; padding: 28px 24px;
+    border: 1px solid #e0d8cc;
+  }
+  .lp-t-quote { font-size: 36px; color: #c4844a; line-height: 1; margin-bottom: 12px; font-family:'Playfair Display',serif; }
+  .lp-t-text  { font-size: 14px; color: #5a5a54; line-height: 1.7; margin-bottom: 20px; }
+  .lp-t-author { display: flex; align-items:center; gap:12px; }
+  .lp-t-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #fdf5ed; font-size: 20px;
+    display: flex; align-items:center; justify-content:center;
+  }
+  .lp-t-name { font-size:14px; font-weight:600; }
+  .lp-t-role { font-size:12px; color:#5a5a54; }
+
+  .lp-price-wrap { background: #ede9df; }
+  .lp-price { max-width: 800px; margin: 0 auto; padding: 90px 48px; text-align: center; }
+  .lp-price h2 { margin-bottom: 48px; }
+  .lp-price-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; text-align:left; }
+  .lp-price-card {
+    background: #fff; border-radius: 24px; padding: 36px 32px;
+    border: 1px solid #e0d8cc;
+  }
+  .lp-price-card.pro { background: #1a1a18; border-color: #1a1a18; }
+  .lp-price-plan { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:#c4844a; margin-bottom:16px; }
+  .lp-price-card.pro .lp-price-plan { color: #e8a870; }
+  .lp-price-val {
+    font-family:'Playfair Display',serif;
+    font-size:48px; font-weight:700; color:#1a1a18; line-height:1;
+  }
+  .lp-price-card.pro .lp-price-val { color: #fff; }
+  .lp-price-per { font-size:14px; color:#5a5a54; margin-bottom:28px; margin-top:4px; }
+  .lp-price-card.pro .lp-price-per { color: #888; }
+  .lp-price-feats { list-style:none; margin-bottom:32px; padding: 0; }
+  .lp-price-feats li {
+    font-size:14px; color:#5a5a54; padding: 8px 0;
+    border-bottom: 1px solid #e0d8cc;
+    display:flex; align-items:center; gap:8px;
+  }
+  .lp-price-feats li::before { content:'✓'; color:#c4844a; font-weight:700; }
+  .lp-price-card.pro .lp-price-feats li { color:#ccc; border-color: rgba(255,255,255,.1); }
+  .lp-price-card.pro .lp-price-feats li::before { color:#e8a870; }
+  .lp-price-btn {
+    display:block; text-align:center; text-decoration:none;
+    padding:14px; border-radius:100px; font-size:15px; font-weight:600;
+    cursor:pointer; border:none; width:100%;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .2s, transform .15s;
+  }
+  .lp-price-btn-f { background: #f5f0e8; color:#1a1a18; border: 1.5px solid #e0d8cc; }
+  .lp-price-btn-f:hover { border-color:#c4844a; background:#fdf5ed; }
+  .lp-price-btn-p { background: #c4844a; color:#fff; }
+  .lp-price-btn-p:hover { background:#b5753e; transform:translateY(-1px); }
+
+  .lp-cta-wrap { background: #c4844a; }
+  .lp-cta { max-width: 700px; margin: 0 auto; padding: 90px 48px; text-align:center; }
+  .lp-cta h2 { font-family:'Playfair Display',serif; font-size:clamp(32px,5vw,50px); color:#fff; margin-bottom:16px; }
+  .lp-cta h2 em { font-style:italic; }
+  .lp-cta p { color:rgba(255,255,255,.85); font-size:18px; line-height:1.6; margin-bottom:36px; }
+  .lp-cta-btn {
+    display:inline-block; background:#fff; color:#c4844a;
+    padding:16px 36px; border-radius:100px;
+    font-size:17px; font-weight:700; border:none; cursor:pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition:transform .2s, box-shadow .2s;
+  }
+  .lp-cta-btn:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,0,0,.15); }
+  .lp-cta-note { margin-top:16px; font-size:13px; color:rgba(255,255,255,.65); }
+
+  .lp-footer {
+    background: #1a1a18; padding: 40px 48px;
+    display: flex; align-items:center; justify-content:space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .lp-foot-logo { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#fff; }
+  .lp-foot-logo span { color:#e8a870; }
+  .lp-foot-copy { font-size:13px; color:#666; }
+  .lp-foot-links { display:flex; gap:24px; }
+  .lp-foot-links a { font-size:13px; color:#888; text-decoration:none; cursor:pointer; }
+  .lp-foot-links a:hover { color:#fff; }
+
+  .lp-sec-eye {
+    font-size:13px; font-weight:600; text-transform:uppercase;
+    letter-spacing:1.5px; color:#c4844a; margin-bottom:12px;
+  }
+  .lp-h2 {
+    font-family:'Playfair Display',serif;
+    font-size:clamp(30px,4vw,44px); font-weight:700;
+    line-height:1.15; letter-spacing:-.5px; color:#1a1a18;
+  }
+  .lp-h2 em { font-style:italic; color:#c4844a; }
+
+  .lp-reveal {
+    opacity:0; transform:translateY(24px);
+    transition:opacity .55s ease, transform .55s ease;
+  }
+  .lp-reveal.lp-in { opacity:1; transform:none; }
+
+  @media (max-width: 768px) {
+    .lp-nav { padding: 16px 20px; }
+    .lp-hero { grid-template-columns:1fr; padding:60px 20px 80px; gap:40px; }
+    .lp-visual { display:none; }
+    .lp-stats { gap:20px; flex-wrap:wrap; }
+    .lp-problem { padding:60px 20px; }
+    .lp-p-cards { grid-template-columns:1fr; }
+    .lp-feat { padding:60px 20px; }
+    .lp-feat-grid { grid-template-columns:1fr; }
+    .lp-feat-card.wide { grid-column:span 1; }
+    .lp-how { padding:60px 20px; }
+    .lp-steps { grid-template-columns:1fr; gap:32px; }
+    .lp-step-arrow { display:none; }
+    .lp-testi { padding:60px 20px; }
+    .lp-testi-grid { grid-template-columns:1fr; }
+    .lp-price { padding:60px 20px; }
+    .lp-price-cards { grid-template-columns:1fr; }
+    .lp-cta { padding:60px 20px; }
+    .lp-footer { flex-direction:column; align-items:flex-start; padding:32px 20px; }
+    .lp-float { display:none; }
+  }
+`;
+
+function LandingPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { isAuthenticated, loading } = useAuth();
+  const revealRef = useRef<IntersectionObserver | null>(null);
 
+  // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate({ to: "/login" });
+    if (!loading && isAuthenticated) {
+      navigate({ to: "/dashboard", search: { list: undefined } });
     }
   }, [loading, isAuthenticated, navigate]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">{t("loading", { defaultValue: "Carregando..." })}</p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return null;
-
-  return <Index />;
-}
-
-function Index() {
-  const { t } = useTranslation();
-  const { user, session, isAuthenticated } = useAuth();
-  const { plan, usage, limits, refresh: refreshPlan } = usePlan();
-  const { open: openUpgrade } = useUpgradeModal();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const routeSearch = Route.useSearch();
-
-  const accessToken = session?.access_token;
-  const userId = user?.id;
-
-  // Default list — persisted per user in localStorage
-  const defaultListKey = userId ? `togo:defaultList:${userId}` : null;
-  const getDefaultListId = () => defaultListKey ? localStorage.getItem(defaultListKey) : null;
-  const saveDefaultListId = (id: string) => { if (defaultListKey) localStorage.setItem(defaultListKey, id); };
-  const [defaultListId, setDefaultListId] = useState<string | null>(() => getDefaultListId());
-
-  const handleSetDefaultList = useCallback((id: string) => {
-    saveDefaultListId(id);
-    setDefaultListId(id);
-  }, [defaultListKey]);
-
-  // Lists
-  const {
-    lists,
-    isLoading: listsLoading,
-    isFetching: listsFetching,
-    isSuccess: listsSuccess,
-    listsQueryKey,
-    activeListId,
-    setActiveListId,
-    setLists,
-    createList: createListAction,
-    deleteList: deleteListAction,
-  } = useLists({
-    isAuthenticated,
-    accessToken,
-    userId,
-    initialActiveListId: routeSearch.list ?? null,
-  });
-
-  // Restaurants for the active list
-  const {
-    restaurants,
-    isLoading: loading,
-    restaurantsRef,
-    tokenRef,
-    setRestaurants,
-    loadRestaurants,
-    prefetchList,
-    addRestaurant: addRestaurantAction,
-    deleteRestaurant: deleteRestaurantAction,
-    toggleVisited,
-    updateRestaurant: updateRestaurantAction,
-  } = useRestaurants(activeListId, accessToken);
-
-  // Filters & derived collections
-  const {
-    search,
-    setSearch,
-    deferredSearch,
-    statusFilter,
-    setStatusFilter,
-    cuisineFilter,
-    setCuisineFilter,
-    advancedFilters,
-    setAdvancedFilters,
-    advancedActiveCount,
-    cuisines,
-    availableTags,
-    availableNeighborhoods,
-    filteredRestaurants: filtered,
-  } = useFilters(restaurants, activeListId);
-
-  const [tab, setTab] = useState<Tab>("list");
-  const [mountedTabs, setMountedTabs] = useState<{ location: boolean; nearme: boolean }>({ location: false, nearme: false });
-  const [cuisineDropdownOpen, setCuisineDropdownOpen] = useState(false);
-  const cuisineDropdownRef = useRef<HTMLDivElement>(null);
-  const [advancedSheetOpen, setAdvancedSheetOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [listDropdown, setListDropdown] = useState(false);
-  const [newListName, setNewListName] = useState("");
-  const [isUserAdmin, setIsUserAdmin] = useState(false);
-  const { shouldShow: showPwaBanner, dismiss: dismissPwaBanner, showInstalled, dismissInstalled } = usePWABanner();
-  const [installGuideOpen, setInstallGuideOpen] = useState(false);
-
-  const switchTab = useCallback((next: Tab) => {
-    setTab(next);
-    if (next === "location" || next === "nearme") {
-      setMountedTabs((prev) => (prev[next] ? prev : { ...prev, [next]: true }));
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!document.getElementById("lp-styles")) {
+      const styleEl = document.createElement("style");
+      styleEl.id = "lp-styles";
+      styleEl.textContent = styles;
+      document.head.appendChild(styleEl);
     }
-  }, []);
 
-  // Open restaurant details (used by map InfoWindow "Ver detalhes")
-  const [detailsRestaurantId, setDetailsRestaurantId] = useState<string | null>(null);
-  useEffect(() => {
-    const handler = (e: CustomEvent<{ id: string }>) => {
-      const id = e.detail?.id;
-      if (id) setDetailsRestaurantId(id);
-    };
-    window.addEventListener("togo:open-restaurant", handler);
-    return () => window.removeEventListener("togo:open-restaurant", handler);
-  }, []);
-  const detailsRestaurant = useMemo(
-    () => restaurants.find((r) => r.id === detailsRestaurantId) ?? null,
-    [restaurants, detailsRestaurantId]
-  );
-
-  useEffect(() => {
-    if (!accessToken) return;
-    isAdminFn({ headers: { Authorization: `Bearer ${accessToken}` } })
-      .then(({ isAdmin }) => setIsUserAdmin(isAdmin))
-      .catch(() => setIsUserAdmin(false));
-  }, [accessToken]);
-
-  // Counters always reflect the currently filtered list (equals total when no filters active)
-  const totalCount = filtered.length;
-  const visitedCount = useMemo(
-    () => filtered.filter((r) => r.visited).length,
-    [filtered]
-  );
-  const toVisitCount = totalCount - visitedCount;
-
-  // Auto-select: prefer default list, fallback to first list
-  useEffect(() => {
-    if (activeListId) return;
-    if (lists.length === 0) return;
-    const preferred = defaultListId && lists.find((l) => l.id === defaultListId);
-    setActiveListId(preferred ? preferred.id : lists[0].id);
-  }, [lists, activeListId, defaultListId, setActiveListId]);
-
-  // First-time user with zero lists: create a default list + seed restaurants.
-  const defaultListBootstrappedRef = useRef(false);
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken) return;
-    if (listsLoading || listsFetching) return;
-    if (!listsSuccess) return;
-    if (lists.length > 0) return;
-    if (defaultListBootstrappedRef.current) return;
-    defaultListBootstrappedRef.current = true;
-    (async () => {
-      try {
-        const list = await createListAction("Minha Lista");
-        setLists([{ id: list.id, name: list.name, created_by: list.created_by }]);
-        setActiveListId(list.id);
-        await seedDefaultRestaurants({
-          data: { listId: list.id },
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        await queryClient.invalidateQueries({ queryKey: listsQueryKey });
-      } catch (err) {
-        console.error("Error creating default list:", err);
-        defaultListBootstrappedRef.current = false;
-      }
-    })();
-  }, [isAuthenticated, accessToken, listsLoading, listsFetching, listsSuccess, lists.length, setLists, setActiveListId, queryClient, listsQueryKey, createListAction]);
-
-  // Pagination: render only first N items, load more on scroll
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [deferredSearch, statusFilter, cuisineFilter, advancedFilters, restaurants.length]);
-  const visibleRestaurants = useMemo(
-    () => filtered.slice(0, visibleCount),
-    [filtered, visibleCount]
-  );
-  const hasMore = visibleCount < filtered.length;
-
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!hasMore) return;
-    const node = sentinelRef.current;
-    if (!node) return;
-    const io = new IntersectionObserver(
+    revealRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
-        }
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              entry.target.classList.add("lp-in");
+            }, i * 80);
+            revealRef.current?.unobserve(entry.target);
+          }
+        });
       },
-      { rootMargin: "400px 0px" }
+      { threshold: 0.08 }
     );
-    io.observe(node);
-    return () => io.disconnect();
-  }, [hasMore, filtered.length]);
 
-  const handleToggleVisited = useCallback((id: string) => toggleVisited(id), [toggleVisited]);
+    document.querySelectorAll(".lp-reveal").forEach((el) => {
+      revealRef.current?.observe(el);
+    });
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      const ok = await deleteRestaurantAction(id);
-      if (ok) refreshPlan();
-    },
-    [deleteRestaurantAction, refreshPlan]
-  );
-
-  const handleRate = useCallback(
-    (id: string, rating: number) => updateRestaurantAction(id, { rating }),
-    [updateRestaurantAction]
-  );
-
-  const handleExportPdf = useCallback(async (opts: ExportPdfOptionsValue) => {
-    const token = tokenRef.current;
-    if (!token) return;
-    try {
-      const sections: ExportSection[] = [];
-      const activeList = lists.find((l) => l.id === activeListId);
-
-      if (opts.scope === "current" || lists.length <= 1) {
-        sections.push({
-          listName: activeList?.name ?? "Minha Lista",
-          restaurants: restaurantsRef.current as unknown as ExportRestaurant[],
-        });
-      } else {
-        const results = await Promise.all(
-          lists.map(async (l) => {
-            try {
-              const { restaurants: data } = await getRestaurants({
-                data: { listId: l.id },
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              return { listName: l.name, restaurants: (data ?? []) as ExportRestaurant[] };
-            } catch {
-              return { listName: l.name, restaurants: [] as ExportRestaurant[] };
-            }
-          })
-        );
-        sections.push(...results);
-      }
-
-      const filenameBase =
-        opts.scope === "all" && lists.length > 1
-          ? "todas-as-listas"
-          : activeList?.name ?? "minha-lista";
-
-      const { exportRestaurantsToPdf } = await import("@/lib/exportPdf");
-      exportRestaurantsToPdf({
-        sections,
-        includeNotes: opts.includeNotes,
-        sortBy: opts.sortBy,
-        includeStatus: opts.includeStatus,
-        filenameBase,
-      });
-
-      setExportOpen(false);
-      toast.success("PDF exportado com sucesso!");
-    } catch (err) {
-      console.error("[exportPdf] failed:", err);
-      toast.error("Não foi possível gerar o PDF.");
-    }
-  }, [activeListId, lists, restaurantsRef, tokenRef]);
-
-  const handleAdd = useCallback(async (data: {
-    name: string;
-    location: string;
-    cuisine: string;
-    address?: string;
-    latitude?: number;
-    longitude?: number;
-    country?: string;
-  }) => {
-    if (!activeListId || !session) return;
-    if (plan === "free" && limits.restaurants !== null && usage.restaurants >= limits.restaurants) {
-      openUpgrade({ reason: "restaurants" });
-      return;
-    }
-    try {
-      await addRestaurantAction({
-        listId: activeListId,
-        name: data.name,
-        location: data.location,
-        cuisine: data.cuisine,
-        address: data.address,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        country: data.country,
-      });
-      refreshPlan();
-    } catch (err: any) {
-      console.error("Error adding restaurant:", err);
-      if (typeof err?.message === "string" && err.message.toLowerCase().includes("limite")) {
-        openUpgrade({ reason: "restaurants" });
-      } else {
-        window.alert(err?.message ?? "Erro ao adicionar restaurante.");
-      }
-    }
-  }, [activeListId, session, plan, limits.restaurants, usage.restaurants, refreshPlan, openUpgrade, addRestaurantAction]);
-
-  const [geocoding, setGeocoding] = useState(false);
-  const [geocodeMsg, setGeocodeMsg] = useState<string | null>(null);
-  const autoGeocodeStartedRef = useRef<string | null>(null);
-
-  const runGeocode = useCallback(async (interactive = false) => {
-    if (!activeListId || !session || geocoding) return;
-    const missing = restaurants.filter((r) => r.latitude == null || r.longitude == null).length;
-    if (missing === 0) {
-      if (interactive) {
-        setGeocodeMsg("Todos os restaurantes já estão geolocalizados.");
-        setTimeout(() => setGeocodeMsg(null), 3500);
-      }
-      return;
-    }
-    if (
-      interactive &&
-      !window.confirm(`Buscar endereços reais para ${missing} restaurante(s)? Isso pode levar alguns minutos.`)
-    ) {
-      return;
-    }
-    setGeocoding(true);
-    let totalUpdated = 0;
-    let totalFailed = 0;
-    let safety = 50;
-    try {
-      while (safety-- > 0) {
-        const res = await geocodeListRestaurants({
-          data: { listId: activeListId },
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        totalUpdated += res.updated;
-        totalFailed += res.failed;
-        setGeocodeMsg(`Corrigindo endereços... ${totalUpdated} atualizados, ${res.remaining} restantes.`);
-        if (res.processed === 0 || res.remaining === 0) break;
-      }
-      setGeocodeMsg(`✓ ${totalUpdated} atualizado(s), ${totalFailed} sem resultado.`);
-      await loadRestaurants();
-    } catch (err) {
-      console.error("Geocode error:", err);
-      if (interactive) {
-        setGeocodeMsg("Erro ao buscar endereços. Tente novamente.");
-      }
-    } finally {
-      setGeocoding(false);
-      setTimeout(() => setGeocodeMsg(null), 6000);
-    }
-  }, [activeListId, session, geocoding, restaurants, loadRestaurants]);
-
-  useEffect(() => {
-    if (!activeListId || !session || geocoding || restaurants.length === 0) return;
-    const hasMissing = restaurants.some((r) => r.latitude == null || r.longitude == null);
-    if (!hasMissing) return;
-    if (autoGeocodeStartedRef.current === activeListId) return;
-
-    autoGeocodeStartedRef.current = activeListId;
-    void runGeocode(false);
-  }, [activeListId, session, geocoding, restaurants, runGeocode]);
-
-  // Auto-refresh opening hours from Google Places (hybrid strategy).
-  // Runs in background once per list when stale or missing hours are detected.
-  const hoursRefreshStartedRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!activeListId || !session || restaurants.length === 0) return;
-    if (hoursRefreshStartedRef.current === activeListId) return;
-    const STALE_MS = 7 * 24 * 60 * 60 * 1000;
-    const needsRefresh = restaurants.some(
-      (r) =>
-        r.latitude != null &&
-        r.longitude != null &&
-        (!r.hours_updated_at || Date.now() - new Date(r.hours_updated_at).getTime() > STALE_MS)
-    );
-    if (!needsRefresh) return;
-    hoursRefreshStartedRef.current = activeListId;
-    (async () => {
-      try {
-        let safety = 30;
-        while (safety-- > 0) {
-          const res = await refreshOpeningHours({
-            data: { listId: activeListId },
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          });
-          if (res.processed === 0 || res.remaining === 0) break;
-        }
-        await loadRestaurants();
-      } catch (err) {
-        console.error("[refreshOpeningHours] failed:", err);
-      }
-    })();
-  }, [activeListId, session, restaurants, loadRestaurants]);
-
-  useEffect(() => {
-    if (!cuisineDropdownOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (cuisineDropdownRef.current && !cuisineDropdownRef.current.contains(e.target as Node)) {
-        setCuisineDropdownOpen(false);
-      }
+    return () => {
+      revealRef.current?.disconnect();
+      document.getElementById("lp-styles")?.remove();
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [cuisineDropdownOpen]);
+  }, []);
 
-  const handleCreateList = async () => {
-    if (!newListName.trim() || !session) return;
-    if (plan === "free" && limits.lists !== null && usage.lists >= limits.lists) {
-      setListDropdown(false);
-      openUpgrade({ reason: "lists" });
-      return;
-    }
-    try {
-      const list = await createListAction(newListName.trim());
-      setLists((prev) => [{ id: list.id, name: list.name, created_by: list.created_by }, ...prev]);
-      setActiveListId(list.id);
-      autoGeocodeStartedRef.current = null;
-      setNewListName("");
-      setListDropdown(false);
-      refreshPlan();
-    } catch (err: any) {
-      console.error("Error creating list:", err);
-      if (typeof err?.message === "string" && err.message.toLowerCase().includes("limite")) {
-        setListDropdown(false);
-        openUpgrade({ reason: "lists" });
-      } else {
-        window.alert(err?.message ?? "Erro ao criar lista.");
-      }
-    }
-  };
-
-  const handleDeleteList = async (listId: string, listName: string) => {
-    if (!session) return;
-    if (!window.confirm(`Excluir a lista "${listName}"? Todos os restaurantes dela serão removidos. Esta ação não pode ser desfeita.`)) return;
-    const prevLists = lists;
-    const remaining = lists.filter((l) => l.id !== listId);
-    setLists(remaining);
-    if (activeListId === listId) {
-      const next = remaining[0]?.id ?? null;
-      setActiveListId(next);
-      autoGeocodeStartedRef.current = null;
-      if (!next) setRestaurants([]);
-    }
-    try {
-      await deleteListAction(listId);
-    } catch (err) {
-      console.error("Error deleting list:", err);
-      setLists(prevLists);
-      window.alert("Não foi possível excluir a lista. Tente novamente.");
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/login" });
-  };
-
-  const activeList = lists.find((l) => l.id === activeListId);
-
-  const isMapTab = tab === "location";
+  const goToLogin = () => navigate({ to: "/login" });
+  const goToSignup = () => navigate({ to: "/login" });
+  const goToPricing = () => navigate({ to: "/pricing" });
 
   return (
-    <div
-      className={isMapTab ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-[100dvh] flex flex-col"}
-      style={{ background: "#faf9f7" }}
-    >
-      {/* Header */}
-      <header
-        className="shrink-0"
-        style={{
-          background: "#faf9f7",
-          borderBottom: "1px solid #ede9e3",
-          padding: "max(36px, calc(env(safe-area-inset-top) + 10px)) 20px 12px",
-        }}
-      >
-        <div className="mx-auto max-w-lg">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex items-center gap-2.5">
-              <h1
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 22,
-                  fontWeight: 400,
-                  color: "#1a1a18",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                }}
-              >
-                To Go
-              </h1>
-              <Link
-                to="/pricing"
-                title={
-                  plan === "free" && limits.restaurants !== null
-                    ? `${usage.restaurants}/${limits.restaurants} restaurantes · ${usage.lists}/${limits.lists} listas`
-                    : "Plano Pro"
-                }
-                style={
-                  plan === "pro"
-                    ? {
-                        background: "#f5efe0",
-                        border: "1px solid #e8d9b0",
-                        color: "#c4844a",
-                        fontSize: 10,
-                        padding: "3px 8px",
-                        borderRadius: 6,
-                        fontWeight: 600,
-                        letterSpacing: "0.04em",
-                        lineHeight: 1.2,
-                      }
-                    : {
-                        background: "#f0ede8",
-                        border: "1px solid #e3ddd3",
-                        color: "#999",
-                        fontSize: 10,
-                        padding: "3px 8px",
-                        borderRadius: 6,
-                        fontWeight: 600,
-                        letterSpacing: "0.04em",
-                        lineHeight: 1.2,
-                      }
-                }
-              >
-                {plan === "pro" ? "✦ PRO" : "FREE"}
-              </Link>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {isUserAdmin && (
-                <Link
-                  to="/admin"
-                  className="flex items-center justify-center transition-colors"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    background: "#fff",
-                    border: "1px solid #ede9e3",
-                    borderRadius: 10,
-                    color: "#888",
-                  }}
-                  aria-label="Painel admin"
-                >
-                  <Shield size={16} />
-                </Link>
-              )}
-              {activeListId && activeList?.created_by === user?.id && (
-                <button
-                  onClick={() => setInviteOpen(true)}
-                  className="flex items-center justify-center transition-colors"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    background: "#fff",
-                    border: "1px solid #ede9e3",
-                    borderRadius: 10,
-                    color: "#888",
-                  }}
-                  aria-label="Convidar"
-                >
-                  <Users size={16} />
-                </button>
-              )}
-              <Link
-                to="/settings"
-                className="flex items-center justify-center transition-colors"
-                style={{
-                  width: 36,
-                  height: 36,
-                  background: "#fff",
-                  border: "1px solid #ede9e3",
-                  borderRadius: 10,
-                  color: "#888",
-                }}
-                aria-label={t("settings", { defaultValue: "Configurações" })}
-              >
-                <Settings size={16} />
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center transition-colors"
-                style={{
-                  width: 36,
-                  height: 36,
-                  background: "#fff",
-                  border: "1px solid #ede9e3",
-                  borderRadius: 10,
-                  color: "#888",
-                }}
-                aria-label="Sair"
-              >
-                <LogOut size={16} />
-              </button>
-              <button
-                onClick={() => setDialogOpen(true)}
-                className="flex items-center justify-center active:scale-95 transition-transform"
-                style={{
-                  width: 36,
-                  height: 36,
-                  background: "#1a1a18",
-                  borderRadius: 10,
-                  color: "#fff",
-                }}
-                aria-label={t("add_restaurant")}
-              >
-                <Plus size={20} />
-              </button>
-            </div>
-          </div>
-
-          {/* List selector */}
-          <div className="mt-4 relative">
-            <button
-              onClick={() => setListDropdown(!listDropdown)}
-              className="flex w-full items-center justify-between"
-              style={{
-                background: "#fff",
-                border: "1px solid #ede9e3",
-                borderRadius: 12,
-                padding: "10px 14px",
-                fontSize: 14,
-                color: "#1a1a18",
-              }}
-            >
-              <span className="truncate">{activeList?.name || t("select_list")}</span>
-              <ChevronDown size={16} className="shrink-0 ml-2" style={{ color: "#888" }} />
-            </button>
-            {listDropdown && (
-              <div
-                className="absolute top-full left-0 right-0 z-50 mt-1 overflow-hidden"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #ede9e3",
-                  borderRadius: 12,
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                }}
-              >
-                {lists.map((l) => (
-                  <div
-                    key={l.id}
-                    className="flex items-center"
-                    style={l.id === activeListId ? { background: "#faf9f7" } : undefined}
-                  >
-                    <button
-                      onClick={() => { setActiveListId(l.id); setListDropdown(false); }}
-                      onMouseEnter={() => prefetchList(l.id)}
-                      onFocus={() => prefetchList(l.id)}
-                      onTouchStart={() => prefetchList(l.id)}
-                      className="flex-1 px-4 py-2.5 text-left text-sm transition-colors"
-                      style={{ color: "#1a1a18", fontWeight: l.id === activeListId ? 500 : 400 }}
-                    >
-                      {l.name}
-                      {l.id === defaultListId && (
-                        <span className="ml-1.5 text-[10px] text-amber-500 font-normal">principal</span>
-                      )}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleSetDefaultList(l.id); }}
-                      className="flex h-9 w-9 items-center justify-center rounded transition-colors"
-                      style={{ color: l.id === defaultListId ? "#f59e0b" : "#ccc" }}
-                      aria-label={`Definir ${l.name} como lista padrão`}
-                      title="Definir como lista padrão"
-                    >
-                      <Star size={14} fill={l.id === defaultListId ? "#f59e0b" : "none"} />
-                    </button>
-                    {l.created_by === user?.id && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteList(l.id, l.name); }}
-                        className="flex h-9 w-9 items-center justify-center mr-1 rounded transition-colors"
-                        style={{ color: "#bbb" }}
-                        aria-label={`Excluir lista ${l.name}`}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <div className="p-2 flex gap-2" style={{ borderTop: "1px solid #ede9e3" }}>
-                  <input
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                    placeholder="Nova lista..."
-                    className="flex-1 px-2 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      background: "#faf9f7",
-                      border: "1px solid #ede9e3",
-                      borderRadius: 8,
-                      color: "#1a1a18",
-                    }}
-                    onKeyDown={(e) => e.key === "Enter" && handleCreateList()}
-                  />
-                  <button
-                    onClick={handleCreateList}
-                    className="px-3 py-1.5 text-xs font-medium"
-                    style={{ background: "#1a1a18", color: "#fff", borderRadius: 8 }}
-                  >
-                    Criar
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {!isMapTab && (
-          <div
-            className="mt-3 grid grid-cols-3"
-            style={{
-              background: "#fff",
-              border: "1px solid #ede9e3",
-              borderRadius: 14,
-              padding: "14px 0",
-            }}
-          >
-            <div className="text-center">
-              <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                {t("total")}
-              </p>
-              <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>
-                {totalCount}
-                {filtered.length !== restaurants.length && <span style={{ fontSize: 11, color: "#c4844a", marginLeft: 3 }}>▼</span>}
-              </p>
-            </div>
-            <div className="text-center" style={{ borderLeft: "1px solid #ede9e3", borderRight: "1px solid #ede9e3" }}>
-              <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                {t("visited")}
-              </p>
-              <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{visitedCount}</p>
-            </div>
-            <div className="text-center">
-              <p style={{ fontSize: 9, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-                {t("to_visit")}
-              </p>
-              <p style={{ marginTop: 4, fontSize: 24, fontWeight: 500, color: "#1a1a18", lineHeight: 1 }}>{toVisitCount}</p>
-            </div>
-          </div>
-          )}
-          {showPwaBanner && (
-            <PWAInstallBanner
-              onInstall={() => setInstallGuideOpen(true)}
-              onDismiss={dismissPwaBanner}
-            />
-          )}
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
-        {/* List tab — always mounted */}
-        <div className={tab === "list" ? "px-4 py-3 space-y-3" : "hidden"}>
-            <EarlyAdopterBanner
-              plan={plan}
-              onActivated={() => window.location.reload()}
-            />
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("search_placeholder")}
-                className="w-full rounded-lg border border-input bg-card pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="all">{t("filter_all")}</option>
-                <option value="visited">{t("filter_visited")}</option>
-                <option value="to-visit">{t("filter_to_visit")}</option>
-              </select>
-              <div ref={cuisineDropdownRef} className="flex-1 relative">
-                <button
-                  type="button"
-                  onClick={() => setCuisineDropdownOpen((o) => !o)}
-                  className={`w-full rounded-lg border bg-card px-3 py-2 text-sm text-left text-foreground focus:outline-none focus:ring-2 focus:ring-ring flex items-center justify-between gap-2 ${cuisineFilter.length > 0 ? "border-primary" : "border-input"}`}
-                >
-                  <span className="truncate">
-                    {cuisineFilter.length === 0
-                      ? t("cuisine_all", { defaultValue: "Todas" })
-                      : cuisineFilter.length === 1
-                      ? cuisineFilter[0]
-                      : `${cuisineFilter.length} ${t("cuisine_selected", { defaultValue: "selecionadas" })}`}
-                  </span>
-                  <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
-                </button>
-                {cuisineDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 z-30 mt-1 rounded-lg border border-border bg-card shadow-lg overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => { setCuisineFilter([]); setCuisineDropdownOpen(false); }}
-                      className={`w-full px-3 py-2 text-left text-sm border-b border-border active:bg-accent transition-colors ${cuisineFilter.length === 0 ? "font-medium text-primary" : "text-foreground"}`}
-                    >
-                      {t("cuisine_all", { defaultValue: "Todas" })}
-                    </button>
-                    <div className="max-h-56 overflow-y-auto">
-                      {cuisines.map((c) => {
-                        const checked = cuisineFilter.includes(c);
-                        return (
-                          <label
-                            key={c}
-                            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground cursor-pointer active:bg-accent transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => {
-                                setCuisineFilter((prev) =>
-                                  prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
-                                );
-                              }}
-                              className="h-4 w-4 rounded border-input accent-primary"
-                            />
-                            <span className="truncate">{c}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {plan === "pro" ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setAdvancedSheetOpen(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                  >
-                    <SlidersHorizontal size={12} />
-                    <span>{t("advanced_filters")}</span>
-                    {advancedActiveCount > 0 && (
-                      <span
-                        className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
-                        style={{ background: "#c4844a" }}
-                      >
-                        {advancedActiveCount}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setExportOpen(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                  >
-                    <FileDown size={12} />
-                    <span>{t("export_pdf")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAdvancedSheetOpen(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                  >
-                    <Tag size={12} />
-                    <span>Tags</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <ProLockBadge variant="button" {...{featureName: t("advanced_filters")}} />
-                  <ProLockBadge variant="button" {...{featureName: t("export_pdf")}} />
-                  <ProLockBadge variant="button" featureName="Tags" />
-                </>
-              )}
-            </div>
-
-            <div className="space-y-2.5 pb-20">
-              {loading ? (
-                <div className="space-y-2.5" aria-label="Carregando restaurantes">
-                  {Array.from({ length: 5 }).map((_, i) => {
-                    // Deterministic pseudo-random widths so SSR matches client
-                    const nameWidth = 40 + ((i * 37) % 31); // 40–70%
-                    return (
-                      <div
-                        key={i}
-                        className="rounded-xl p-3"
-                        style={{ background: "#fff", border: "1px solid #ede9e3" }}
-                      >
-                        <Skeleton className="h-4 rounded" style={{ width: `${nameWidth}%` }} />
-                        <Skeleton className="mt-2 h-3 rounded" style={{ width: "30%" }} />
-                        <div className="mt-3 flex gap-1.5">
-                          <Skeleton className="h-5 w-14 rounded-full" />
-                          <Skeleton className="h-5 w-12 rounded-full" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : filtered.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">{t("no_restaurants")}</p>
-              ) : (
-                <>
-                  {visibleRestaurants.map((r) => (
-                    <RestaurantCard
-                      key={r.id}
-                      restaurant={r}
-                      onToggleVisited={handleToggleVisited}
-                      onDelete={handleDelete}
-                      onRate={handleRate}
-                      onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
-                      isOpen={isOpenNow(r.opening_hours ?? null)}
-                    />
-                  ))}
-                  {hasMore && (
-                    <div ref={sentinelRef} className="py-4 flex justify-center">
-                      <Skeleton className="h-[88px] w-full rounded-xl" />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-        </div>
-
-        {/* Map tab — full-bleed, fills space between header and bottom nav */}
-        {mountedTabs.location && (
-          <div
-            className={tab === "location" ? "absolute inset-0 overflow-hidden" : "hidden"}
-            style={tab === "location" ? { bottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
-          >
-            <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">{t("loading_map", { defaultValue: "Carregando mapa..." })}</div>}>
-              <LazyMapView restaurants={restaurants} />
-            </Suspense>
-          </div>
-        )}
-
-        {/* Near-me tab — mounted on first visit, kept alive after */}
-        {mountedTabs.nearme && (
-          <div className={tab === "nearme" ? "px-4 py-3 pb-20" : "hidden"}>
-            <Suspense fallback={<div className="flex items-center justify-center py-20 text-sm text-muted-foreground">{t("loading", { defaultValue: "Carregando..." })}</div>}>
-              <LazyNearMeView restaurants={restaurants} onToggleVisited={handleToggleVisited} />
-            </Suspense>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom tab bar */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]"
-        style={{ background: "#faf9f7", borderTop: "1px solid #ede9e3" }}
-      >
-        <div className="mx-auto max-w-lg flex">
-          <button
-            onClick={() => switchTab("list")}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
-            style={{ color: tab === "list" ? "#c4844a" : "#bbb" }}
-          >
-            <List size={20} />
-            Lista
-          </button>
-          <button
-            onClick={() => switchTab("location")}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
-            style={{ color: tab === "location" ? "#c4844a" : "#bbb" }}
-          >
-            <MapPin size={20} />
-            Mapa
-          </button>
-          <button
-            onClick={() => switchTab("nearme")}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
-            style={{ color: tab === "nearme" ? "#c4844a" : "#bbb" }}
-          >
-            <Navigation size={20} />
-            Perto
-          </button>
+    <div className="lp-root">
+      <nav className="lp-nav">
+        <button className="lp-nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          To <span>Go</span>
+        </button>
+        <div className="lp-nav-actions">
+          <button className="lp-nav-login" onClick={goToLogin}>Entrar</button>
+          <button className="lp-nav-btn" onClick={goToSignup}>Começar grátis →</button>
         </div>
       </nav>
 
-      {session && (
-        <AddRestaurantDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          onAdd={handleAdd}
-          session={session}
-        />
-      )}
-      {activeListId && (
-        <InviteDialog
-          open={inviteOpen}
-          onClose={() => setInviteOpen(false)}
-          listId={activeListId}
-          session={session!}
-        />
-      )}
-      <AdvancedFiltersSheet
-        open={advancedSheetOpen}
-        onClose={() => setAdvancedSheetOpen(false)}
-        value={advancedFilters}
-        onChange={setAdvancedFilters}
-        availableCuisines={cuisines}
-        availableTags={availableTags}
-        availableNeighborhoods={availableNeighborhoods}
-      />
-      {exportOpen && (
-        <Suspense fallback={null}>
-          <LazyExportPdfDialog
-            open={exportOpen}
-            onClose={() => setExportOpen(false)}
-            onConfirm={handleExportPdf}
-            allowAllLists={lists.length > 1}
-            currentListName={lists.find((l) => l.id === activeListId)?.name ?? "Minha Lista"}
-          />
-        </Suspense>
-      )}
-      <Suspense fallback={null}>
-        <LazyChefAIWidget
-          restaurants={restaurants.map((r) => ({
-            name: r.name,
-            cuisine: r.cuisine,
-            location: r.location,
-            rating: r.rating,
-            visited: r.visited,
-            occasion: r.occasion,
-            tags: r.tags,
-          }))}
-        />
-      </Suspense>
-      {detailsRestaurant && (
-        <RestaurantDetailsDialog
-          restaurant={detailsRestaurant}
-          open={!!detailsRestaurantId}
-          onOpenChange={(o: boolean) => { if (!o) setDetailsRestaurantId(null); }}
-          onToggleVisited={handleToggleVisited}
-          onDelete={(id: string) => { handleDelete(id); setDetailsRestaurantId(null); }}
-          onRate={handleRate}
-          onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
-          onSaveTags={(id, tags) => updateRestaurantAction(id, { tags })}
-        />
-      )}
-      <InstallGuideDialog open={installGuideOpen} onOpenChange={setInstallGuideOpen} />
-      <InstallSuccessDialog
-        open={showInstalled}
-        onOpenChange={(o) => { if (!o) dismissInstalled(); }}
-        onGoToList={dismissInstalled}
-      />
+      <div className="lp-hero-wrap">
+        <div className="lp-hero">
+          <div>
+            <div className="lp-eyebrow lp-reveal">🍽️ Lista pessoal de restaurantes</div>
+            <h1 className="lp-h1 lp-reveal">
+              Nunca mais esqueça <em>onde queria ir</em>
+            </h1>
+            <p className="lp-sub lp-reveal">
+              Salve restaurantes, organize por listas, veja no mapa e compartilhe com quem você ama. Simples assim.
+            </p>
+            <div className="lp-btns lp-reveal">
+              <button className="lp-btn-primary" onClick={goToSignup}>Criar minha lista grátis</button>
+              <a className="lp-btn-secondary" href="#features">Ver como funciona</a>
+            </div>
+            <div className="lp-stats lp-reveal">
+              <div>
+                <div className="lp-stat-num">20+</div>
+                <div className="lp-stat-label">restaurantes no free</div>
+              </div>
+              <div>
+                <div className="lp-stat-num">∞</div>
+                <div className="lp-stat-label">no plano Pro</div>
+              </div>
+              <div>
+                <div className="lp-stat-num">R$0</div>
+                <div className="lp-stat-label">para começar</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-visual lp-reveal">
+            <div className="lp-blob lp-blob-1" />
+            <div className="lp-blob lp-blob-2" />
+            <div className="lp-float lp-float-left">
+              <div className="lp-fc-label">Adicionado agora</div>
+              <div className="lp-fc-val">🍣 Kappou</div>
+            </div>
+            <div className="lp-phone">
+              <div className="lp-phone-bar">
+                <span className="lp-phone-title">To Go</span>
+                <span className="lp-phone-add">+</span>
+              </div>
+              <div className="lp-phone-list">
+                {[
+                  { icon: "🍝", name: "Fasano", loc: "Jardins", tag: "❤️ Fav", cls: "tag-fav" },
+                  { icon: "🍣", name: "Kappou", loc: "Pinheiros", tag: "Quero ir", cls: "tag-want" },
+                  { icon: "🥩", name: "Cora", loc: "Higienópolis", tag: "✓ Visitei", cls: "tag-visit" },
+                  { icon: "🍜", name: "Lotte", loc: "Jung-gu · Coreia do Sul", tag: "Quero ir", cls: "tag-want" },
+                ].map((r) => (
+                  <div className="lp-phone-card" key={r.name}>
+                    <span className="lp-pc-icon">{r.icon}</span>
+                    <div>
+                      <div className="lp-pc-name">{r.name}</div>
+                      <div className="lp-pc-loc">{r.loc}</div>
+                    </div>
+                    <span className={`lp-pc-tag ${r.cls}`}>{r.tag}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="lp-float lp-float-right">
+              <div className="lp-fc-label">Lista compartilhada</div>
+              <div className="lp-fc-val">📍 SP Favoritos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-problem-wrap">
+        <div className="lp-problem">
+          <div className="lp-sec-eye lp-reveal">O problema</div>
+          <h2 className="lp-h2 lp-reveal" style={{ color: "#fff" }}>
+            Você esquece <em>onde queria ir</em>
+          </h2>
+          <p className="lp-reveal">
+            Recebeu uma indicação incrível, salvou nos favoritos do Maps, anotou no bloco de notas… e sumiu. Acontece com todo mundo. O To Go resolve isso de vez.
+          </p>
+          <div className="lp-p-cards">
+            {[
+              { icon: "😵", title: "Indicações se perdem", desc: "Você ouve sobre um lugar incrível e esquece o nome em horas." },
+              { icon: "🗂️", title: "Salvo em mil lugares", desc: "Favoritos do Maps, stories, notas, WhatsApp. Espalhado por tudo." },
+              { icon: "🤷", title: '"Onde a gente vai hoje?"', desc: "Na hora de decidir, você não lembra de nenhum dos lugares que queria ir." },
+            ].map((p) => (
+              <div className="lp-p-card lp-reveal" key={p.title}>
+                <div className="lp-p-icon">{p.icon}</div>
+                <div>
+                  <div className="lp-p-title">{p.title}</div>
+                  <div className="lp-p-desc">{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-feat-wrap" id="features">
+        <div className="lp-feat">
+          <div className="lp-sec-eye lp-reveal">Funcionalidades</div>
+          <h2 className="lp-h2 lp-reveal">
+            Tudo que você precisa para <em>nunca esquecer</em>
+          </h2>
+          <div className="lp-feat-grid">
+            <div className="lp-feat-card wide lp-reveal">
+              <div className="lp-feat-emoji">🗺️</div>
+              <div className="lp-feat-title">Veja tudo no mapa</div>
+              <div className="lp-feat-desc">Visualize todos os seus restaurantes no mapa e descubra quais estão perto de você agora. Perfeito para planejar o próximo passeio.</div>
+            </div>
+            {[
+              { emoji: "📋", title: "Listas organizadas", desc: 'Crie listas para "Quero ir", "Favoritos", "Viagem SP" — o que fizer sentido pra você.' },
+              { emoji: "✅", title: "Marcar como visitado", desc: "Registre que foi ao restaurante e acompanhe seu histórico de descobertas gastronômicas." },
+              { emoji: "🔗", title: "Compartilhar via link", desc: "Mande sua lista para amigos ou receba a deles. Sem precisar baixar nada." },
+              { emoji: "🌍", title: "Internacionais", desc: "Restaurantes fora do Brasil aparecem com país e cidade — perfeito para quem viaja." },
+              { emoji: "🏷️", title: "Tags personalizadas", desc: 'Adicione tags como "romântico", "vegano", "vista incrível" e filtre por elas.' },
+            ].map((f) => (
+              <div className="lp-feat-card lp-reveal" key={f.title}>
+                <div className="lp-feat-emoji">{f.emoji}</div>
+                <div className="lp-feat-title">{f.title}</div>
+                <div className="lp-feat-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-how-wrap">
+        <div className="lp-how">
+          <div className="lp-sec-eye lp-reveal">Como funciona</div>
+          <h2 className="lp-h2 lp-reveal">
+            Três passos e sua lista <em>está pronta</em>
+          </h2>
+          <div className="lp-steps">
+            {[
+              { n: "1", title: "Crie sua conta", desc: "Acesse mytogo.app e cadastre-se em segundos. Sem cartão de crédito.", arrow: true },
+              { n: "2", title: "Salve restaurantes", desc: "Adicione os lugares que você quer conhecer ou já amou. Nome, bairro, categoria e notas.", arrow: true },
+              { n: "3", title: "Organize e explore", desc: "Filtre por lista, veja no mapa, compartilhe com amigos. Sua vida gastronômica organizada.", arrow: false },
+            ].map((s) => (
+              <div className="lp-step lp-reveal" key={s.n}>
+                <div className="lp-step-num">{s.n}</div>
+                <div className="lp-step-title">{s.title}</div>
+                <div className="lp-step-desc">{s.desc}</div>
+                {s.arrow && <div className="lp-step-arrow">→</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-testi-wrap">
+        <div className="lp-testi">
+          <div className="lp-sec-eye lp-reveal">Depoimentos</div>
+          <h2 className="lp-h2 lp-reveal">Quem já usa <em>não abre mão</em></h2>
+          <div className="lp-testi-grid">
+            {[
+              { text: "Finalmente um lugar só para os meus restaurantes. Antes eu perdia indicação toda semana — agora salvo na hora e nunca mais esqueço.", name: "Ana R.", role: "Usuária Free · São Paulo", av: "👩‍🦱" },
+              { text: "O To Go virou parte do meu dia a dia de foodie. As listas por cidade me ajudaram demais nas últimas viagens.", name: "Marília S.", role: "Usuária Pro · São Paulo", av: "👩" },
+              { text: 'Criei uma lista "Restaurantes do Rio" antes de viajar, compartilhei com minha namorada e chegamos lá já sabendo o roteiro. Perfeito.', name: "Pedro F.", role: "Usuário Pro · Rio de Janeiro", av: "🧑" },
+            ].map((t) => (
+              <div className="lp-t-card lp-reveal" key={t.name}>
+                <div className="lp-t-quote">"</div>
+                <div className="lp-t-text">{t.text}</div>
+                <div className="lp-t-author">
+                  <div className="lp-t-avatar">{t.av}</div>
+                  <div>
+                    <div className="lp-t-name">{t.name}</div>
+                    <div className="lp-t-role">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-price-wrap">
+        <div className="lp-price">
+          <div className="lp-sec-eye lp-reveal">Planos</div>
+          <h2 className="lp-h2 lp-reveal">
+            Comece grátis, <em>faça upgrade</em> quando quiser
+          </h2>
+          <div className="lp-price-cards">
+            <div className="lp-price-card lp-reveal">
+              <div className="lp-price-plan">Free</div>
+              <div className="lp-price-val">R$0</div>
+              <div className="lp-price-per">para sempre</div>
+              <ul className="lp-price-feats">
+                {["Até 20 restaurantes", "3 listas", "Visualização no mapa", "Marcar como visitado", "Compartilhar via link"].map((f) => <li key={f}>{f}</li>)}
+              </ul>
+              <button className="lp-price-btn lp-price-btn-f" onClick={goToSignup}>Começar grátis</button>
+            </div>
+            <div className="lp-price-card pro lp-reveal">
+              <div className="lp-price-plan">Pro</div>
+              <div className="lp-price-val">R$12</div>
+              <div className="lp-price-per">/mês · ou R$89/ano</div>
+              <ul className="lp-price-feats">
+                {["Restaurantes ilimitados", "Listas ilimitadas", "Fotos, notas e tags", "Filtros avançados", "Exportar lista em PDF", "Listas colaborativas", "Restaurantes internacionais"].map((f) => <li key={f}>{f}</li>)}
+              </ul>
+              <button className="lp-price-btn lp-price-btn-p" onClick={goToPricing}>Assinar Pro →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="lp-cta-wrap">
+        <div className="lp-cta lp-reveal">
+          <h2>Sua lista começa <em>agora</em></h2>
+          <p>Chega de esquecer onde queria ir. Junte-se a quem já organiza sua vida gastronômica com o To Go.</p>
+          <button className="lp-cta-btn" onClick={goToSignup}>Criar minha conta grátis →</button>
+          <div className="lp-cta-note">Sem cartão de crédito · Upgrade quando quiser</div>
+        </div>
+      </div>
+
+      <footer className="lp-footer">
+        <div className="lp-foot-logo">To <span>Go</span></div>
+        <div className="lp-foot-copy">© 2026 John Charles Long · To Go</div>
+        <div className="lp-foot-links">
+          <a onClick={() => navigate({ to: "/privacy" })}>Privacidade</a>
+          <a onClick={() => navigate({ to: "/terms" })}>Termos</a>
+          <a onClick={goToLogin}>Entrar</a>
+        </div>
+      </footer>
     </div>
   );
 }
