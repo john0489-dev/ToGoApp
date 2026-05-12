@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { authFetch } from "@/lib/auth-fetch";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
@@ -57,7 +58,7 @@ export function ChefAIWidget({ restaurants }: Props) {
     setInput("");
     setLoading(true);
     try {
-      const resp = await fetch("/api/chef-ai", {
+      const resp = await authFetch("/api/chef-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next, restaurants }),

@@ -5,6 +5,7 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Locate, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
+import { authFetch } from "@/lib/auth-fetch";
 import { formatLocation } from "@/lib/format-location";
 
 type Restaurant = {
@@ -54,7 +55,7 @@ let loaderPromise: Promise<typeof google> | null = null;
 async function loadGoogleMaps(): Promise<typeof google> {
   if (loaderPromise) return loaderPromise;
   loaderPromise = (async () => {
-    const res = await fetch("/api/maps/config", { credentials: "same-origin" });
+    const res = await authFetch("/api/maps/config", { credentials: "same-origin" });
     if (!res.ok) throw new Error("Failed to fetch maps config");
     const { apiKey } = (await res.json()) as { apiKey: string };
     setOptions({
@@ -159,7 +160,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
         const query = [r.address, r.location, r.name].filter(Boolean).join(", ");
         if (!query) continue;
         try {
-          const res = await fetch("/api/maps/geocode", {
+          const res = await authFetch("/api/maps/geocode", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ address: query }),

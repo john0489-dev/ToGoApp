@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Loader2, Sparkles, Search, MapPin } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface PlaceResult {
   name: string;
@@ -41,7 +42,7 @@ const CUISINE_OPTIONS = [
 
 async function searchPlaces(query: string): Promise<PlaceResult[]> {
   if (query.length < 3) return [];
-  const res = await fetch("/api/maps/autocomplete", {
+  const res = await authFetch("/api/maps/autocomplete", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
@@ -182,7 +183,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     const myReq = ++cuisineReqIdRef.current;
     setCuisineLoading(true);
     try {
-      const res = await fetch("/api/suggest-cuisine", {
+      const res = await authFetch("/api/suggest-cuisine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: n.trim(), address: addr.trim() }),
