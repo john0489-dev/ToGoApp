@@ -42,7 +42,7 @@ const CUISINE_OPTIONS = [
 
 async function searchPlaces(query: string): Promise<PlaceResult[]> {
   if (query.length < 3) return [];
-  const res = await fetch("/api/maps/autocomplete", {
+  const res = await authFetch("/api/maps/autocomplete", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
