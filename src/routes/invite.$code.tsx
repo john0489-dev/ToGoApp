@@ -35,7 +35,7 @@ function InvitePage() {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         // Auto-redirect to the shared list
-        navigate({ to: "/", search: { list: result.listId } });
+        navigate({ to: "/dashboard", search: { list: result.listId } });
       } catch (err: any) {
         setMessage(err.message || "Erro ao aceitar convite.");
         setStatus("error");
