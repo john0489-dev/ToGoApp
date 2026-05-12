@@ -78,7 +78,7 @@ function SuccessPage() {
         )}
 
         <button
-          onClick={() => navigate({ to: "/", search: { list: undefined } })}
+          onClick={() => navigate({ to: "/dashboard", search: { list: undefined } })}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md active:scale-[0.98] transition-transform"
           style={{ background: "var(--hero-gradient)" }}
         >
