@@ -183,7 +183,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
     const myReq = ++cuisineReqIdRef.current;
     setCuisineLoading(true);
     try {
-      const res = await fetch("/api/suggest-cuisine", {
+      const res = await authFetch("/api/suggest-cuisine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: n.trim(), address: addr.trim() }),
