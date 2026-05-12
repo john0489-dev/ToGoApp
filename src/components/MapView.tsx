@@ -160,7 +160,7 @@ function MapViewImpl({ restaurants }: MapViewProps) {
         const query = [r.address, r.location, r.name].filter(Boolean).join(", ");
         if (!query) continue;
         try {
-          const res = await fetch("/api/maps/geocode", {
+          const res = await authFetch("/api/maps/geocode", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ address: query }),
