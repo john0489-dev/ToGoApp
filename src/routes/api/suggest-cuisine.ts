@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { requireAuthFromRequest } from "@/lib/require-auth";
 
 interface RequestBody {
   name?: string;
