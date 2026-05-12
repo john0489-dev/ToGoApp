@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "./_middleware";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Get current early adopter slot count and eligibility
