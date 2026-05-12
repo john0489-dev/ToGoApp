@@ -59,6 +59,30 @@ export type Database = {
           },
         ]
       }
+      early_adopters: {
+        Row: {
+          activated_at: string
+          id: string
+          slot_number: number
+          trial_ends_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          id?: string
+          slot_number: number
+          trial_ends_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          id?: string
+          slot_number?: number
+          trial_ends_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           created_at: string
@@ -491,7 +515,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_early_adopter_trial: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       can_add_restaurant: { Args: { _user_id: string }; Returns: boolean }
+      check_early_adopter_trial: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       count_user_restaurants: { Args: { _user_id: string }; Returns: number }
       get_all_signups_admin: {
         Args: never
@@ -501,6 +533,7 @@ export type Database = {
           id: string
         }[]
       }
+      get_early_adopter_count: { Args: never; Returns: number }
       get_list_member_emails: {
         Args: { _list_id: string }
         Returns: {
