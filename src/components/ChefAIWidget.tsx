@@ -28,8 +28,8 @@ const QUICK_PROMPTS: { emoji: string; label: string; prompt: string }[] = [
   { emoji: "🆕", label: "Lugar novo", prompt: "Sugira um lugar novo que eu ainda não conheço" },
 ];
 
-export function ChefAIWidget({
-  const { t } = useTranslation(); restaurants }: Props) {
+export function ChefAIWidget({ restaurants }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(true);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
