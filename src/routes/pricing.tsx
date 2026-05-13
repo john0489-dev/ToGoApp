@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, Loader2, Settings } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, Check, Loader2, Settings, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/usePlan";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
-import { supabase } from "@/integrations/supabase/client";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { createPortalSession } from "@/utils/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -34,8 +36,9 @@ function PricingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { plan, refresh } = usePlan();
-  const { user, session } = useAuth();
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const { user } = useAuth();
+  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
+  const portalFn = useServerFn(createPortalSession);
   const isPro = plan === "pro";
 
   const FREE_FEATURES = [
@@ -55,6 +58,7 @@ function PricingPage() {
 
   const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
   const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const yearlyMonthly = (99 / 12).toFixed(2).replace(".", ",");
 
@@ -63,28 +67,33 @@ function PricingPage() {
       navigate({ to: "/login" });
       return;
     }
+    setCheckoutLoading(true);
     try {
-      await openCheckout({
+      openCheckout({
         priceId: billing === "monthly" ? "togo_pro_monthly" : "togo_pro_yearly",
         userId: user.id,
         customerEmail: user.email ?? undefined,
-        successUrl: `${window.location.origin}/payment/success`,
+        returnUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       });
     } catch (err) {
       console.error("[checkout]", err);
       toast.error("Erro ao processar. Tente novamente.");
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
   const handleManage = async () => {
-    if (!session?.access_token) return;
     setPortalLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-portal-session", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      const url = await portalFn({
+        data: {
+          environment: getStripeEnvironment(),
+          returnUrl: `${window.location.origin}/pricing`,
+        },
       });
-      if (error || !data?.url) throw error || new Error("No URL");
-      window.open(data.url, "_blank", "noopener");
+      if (!url) throw new Error("No URL");
+      window.open(url, "_blank", "noopener");
       setTimeout(refresh, 2000);
     } catch (err) {
       console.error("[portal]", err);
@@ -374,7 +383,7 @@ function PricingPage() {
               </button>
             )}
             <p className="text-center" style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
-              Pagamento seguro via Paddle. Cancele quando quiser.
+              Pagamento seguro via Stripe. Cancele quando quiser.
             </p>
           </div>
         </section>
@@ -397,6 +406,25 @@ function PricingPage() {
           style={{ fontSize: 14, color: "#aaa" }}
         >{t("close")}</Link>
       </div>
+
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+        >
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-auto rounded-2xl bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={closeCheckout}
+              aria-label="Fechar"
+              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white shadow border border-gray-200 hover:bg-gray-50"
+            >
+              <X size={18} />
+            </button>
+            <div className="p-2 pt-12">{checkoutElement}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

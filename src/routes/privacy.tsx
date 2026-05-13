@@ -40,8 +40,8 @@ function PrivacyPage() {
         avaliações e atividades dentro do app.<br />
         <strong>Dados técnicos</strong>: endereço IP, identificador de dispositivo,
         logs de acesso e telemetria mínima necessária para segurança e operação.<br />
-        <strong>Dados de pagamento</strong>: tratados exclusivamente pelo Paddle
-        (Merchant of Record). Nós não armazenamos número de cartão.
+        <strong>Dados de pagamento</strong>: tratados exclusivamente pela Stripe.
+        Nós não armazenamos número de cartão.
       </p>
 
       <h2>3. Finalidades e bases legais do tratamento</h2>
@@ -74,9 +74,8 @@ function PrivacyPage() {
       <p>
         <strong>Provedores de infraestrutura</strong>: Supabase (hospedagem do
         banco de dados, autenticação e storage).<br />
-        <strong>Merchant of Record / pagamentos</strong>: Paddle.com Market Limited,
-        responsável pelo processamento de pagamentos, gestão da assinatura, faturas,
-        impostos e reembolsos.<br />
+        <strong>Provedor de pagamentos</strong>: Stripe, responsável pelo
+        processamento de pagamentos, faturas e gestão da assinatura.<br />
         <strong>Provedor de e-mail transacional</strong>: para envio de
         confirmações, recuperação de senha e avisos.<br />
         <strong>Assessores profissionais</strong> (jurídico, contábil), quando
