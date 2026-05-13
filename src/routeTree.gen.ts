@@ -27,6 +27,7 @@ import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
 import { Route as ApiMapsGeocodeRouteImport } from './routes/api/maps.geocode'
 import { Route as ApiMapsConfigRouteImport } from './routes/api/maps.config'
 import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autocomplete'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -118,6 +119,12 @@ const ApiMapsAutocompleteRoute = ApiMapsAutocompleteRouteImport.update({
   path: '/api/maps/autocomplete',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
   '/api/maps/config': typeof ApiMapsConfigRoute
   '/api/maps/geocode': typeof ApiMapsGeocodeRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesByTo {
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
   '/api/maps/config': typeof ApiMapsConfigRoute
   '/api/maps/geocode': typeof ApiMapsGeocodeRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,6 +188,7 @@ export interface FileRoutesById {
   '/api/maps/autocomplete': typeof ApiMapsAutocompleteRoute
   '/api/maps/config': typeof ApiMapsConfigRoute
   '/api/maps/geocode': typeof ApiMapsGeocodeRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/api/maps/autocomplete'
     | '/api/maps/config'
     | '/api/maps/geocode'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/api/maps/autocomplete'
     | '/api/maps/config'
     | '/api/maps/geocode'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -241,6 +253,7 @@ export interface FileRouteTypes {
     | '/api/maps/autocomplete'
     | '/api/maps/config'
     | '/api/maps/geocode'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -262,6 +275,7 @@ export interface RootRouteChildren {
   ApiMapsAutocompleteRoute: typeof ApiMapsAutocompleteRoute
   ApiMapsConfigRoute: typeof ApiMapsConfigRoute
   ApiMapsGeocodeRoute: typeof ApiMapsGeocodeRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -392,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMapsAutocompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -414,16 +435,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMapsAutocompleteRoute: ApiMapsAutocompleteRoute,
   ApiMapsConfigRoute: ApiMapsConfigRoute,
   ApiMapsGeocodeRoute: ApiMapsGeocodeRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
