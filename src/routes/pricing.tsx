@@ -406,6 +406,25 @@ function PricingPage() {
           style={{ fontSize: 14, color: "#aaa" }}
         >{t("close")}</Link>
       </div>
+
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+        >
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-auto rounded-2xl bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={closeCheckout}
+              aria-label="Fechar"
+              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white shadow border border-gray-200 hover:bg-gray-50"
+            >
+              <X size={18} />
+            </button>
+            <div className="p-2 pt-12">{checkoutElement}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
