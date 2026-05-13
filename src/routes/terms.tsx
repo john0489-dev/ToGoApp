@@ -55,23 +55,9 @@ function TermsPage() {
         cliente.
       </p>
       <p>
-        <strong>
-          Nosso processo de pedido é conduzido pelo nosso revendedor online
-          Paddle.com. A Paddle.com é o Merchant of Record (revendedor oficial)
-          de todos os nossos pedidos. A Paddle gerencia consultas de atendimento
-          ao cliente relativas a cobrança e processa devoluções.
-        </strong>{" "}
-        As condições comerciais de pagamento, faturamento, impostos, cancelamento
-        e reembolso são regidas pelos Termos do Comprador da Paddle, disponíveis
-        em{" "}
-        <a
-          href="https://www.paddle.com/legal/checkout-buyer-terms"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          paddle.com/legal/checkout-buyer-terms
-        </a>
-        .
+        O processamento de pagamentos é feito pela <strong>Stripe</strong>,
+        nossa provedora de pagamentos. As cobranças, faturas e impostos
+        relacionados à assinatura são responsabilidade do operador do To Go.
       </p>
 
       <h2>5. Cancelamento pelo usuário</h2>
@@ -83,8 +69,7 @@ function TermsPage() {
       <h2>6. Reembolso</h2>
       <p>
         A política de reembolso está descrita em{" "}
-        <Link to="/refund">/refund</Link>. As solicitações de reembolso são
-        processadas pela Paddle, conforme indicado naquela página.
+        <Link to="/refund">/refund</Link>.
       </p>
 
       <h2>7. Suspensão e rescisão pelo operador</h2>
@@ -152,13 +137,8 @@ function TermsPage() {
 
       <h2>14. Contato</h2>
       <p>
-        Para dúvidas sobre estes Termos, escreva para o e-mail de suporte
-        indicado dentro do app. Para questões relacionadas a cobrança,
-        reembolso ou pagamento, contate também a Paddle em{" "}
-        <a href="https://paddle.net" target="_blank" rel="noopener noreferrer">
-          paddle.net
-        </a>
-        .
+        Para dúvidas sobre estes Termos, cobrança ou reembolso, escreva para o
+        e-mail de suporte indicado dentro do app.
       </p>
     </LegalLayout>
   );

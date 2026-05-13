@@ -32,61 +32,37 @@ function RefundPage() {
 
       <h2>2. Como solicitar o reembolso</h2>
       <p>
-        Os reembolsos são processados pelo nosso provedor de pagamento e
-        Merchant of Record, a <strong>Paddle</strong>. Para solicitar:
-      </p>
-      <p>
-        1. Acesse{" "}
-        <a href="https://paddle.net" target="_blank" rel="noopener noreferrer">
-          paddle.net
-        </a>{" "}
-        com o e-mail usado na compra para localizar sua transação e abrir um
-        pedido de reembolso; ou<br />
-        2. Escreva para o e-mail de suporte do To Go com o assunto "Reembolso To
-        Go Pro", informando o e-mail da conta e a data da compra. Encaminharemos
-        sua solicitação à Paddle.
+        Para solicitar reembolso, escreva para o e-mail de suporte do To Go com
+        o assunto "Reembolso To Go Pro", informando o e-mail da conta e a data
+        da compra. Processaremos sua solicitação em até 5 dias úteis.
       </p>
 
       <h2>3. Reembolsos fora da janela de 30 dias</h2>
       <p>
-        Solicitações fora da janela de 30 dias podem ainda ser avaliadas pela
-        Paddle, caso a caso, conforme a{" "}
-        <a
-          href="https://www.paddle.com/legal/refund-policy"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Política de Reembolso da Paddle
-        </a>
-        . Recomendamos abrir o pedido em{" "}
-        <a href="https://paddle.net" target="_blank" rel="noopener noreferrer">
-          paddle.net
-        </a>{" "}
+        Solicitações fora da janela de 30 dias podem ainda ser avaliadas
+        caso a caso. Recomendamos abrir o pedido pelo e-mail de suporte
         descrevendo a situação.
       </p>
 
       <h2>4. Cancelamento sem reembolso</h2>
       <p>
-        Você pode cancelar a renovação a qualquer momento e continuar usando o
-        Pro até o fim do período já pago. Após esse prazo, sua conta volta
-        automaticamente para o plano Free e nenhuma cobrança futura será feita.
+        Você pode cancelar a renovação a qualquer momento pelo portal de
+        gerenciamento da assinatura e continuar usando o Pro até o fim do
+        período já pago. Após esse prazo, sua conta volta automaticamente para
+        o plano Free e nenhuma cobrança futura será feita.
       </p>
 
       <h2>5. Forma de devolução</h2>
       <p>
-        O reembolso é processado pela Paddle no mesmo meio de pagamento usado na
-        compra. Pode levar de 5 a 10 dias úteis para aparecer na sua fatura,
-        dependendo do banco emissor.
+        O reembolso é processado no mesmo meio de pagamento usado na compra,
+        via Stripe. Pode levar de 5 a 10 dias úteis para aparecer na sua
+        fatura, dependendo do banco emissor.
       </p>
 
       <h2>6. Contato</h2>
       <p>
-        Para qualquer dúvida, escreva para o e-mail de suporte do To Go ou contate
-        diretamente a Paddle em{" "}
-        <a href="https://paddle.net" target="_blank" rel="noopener noreferrer">
-          paddle.net
-        </a>
-        . Veja também os <Link to="/terms">Termos de Uso</Link> e a{" "}
+        Para qualquer dúvida, escreva para o e-mail de suporte do To Go.
+        Veja também os <Link to="/terms">Termos de Uso</Link> e a{" "}
         <Link to="/privacy">Política de Privacidade</Link>.
       </p>
     </Layout>
