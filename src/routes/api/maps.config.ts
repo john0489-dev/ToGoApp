@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/maps/config")({
         const auth = await requireAuthFromRequest(request);
         if (!auth.ok) return auth.response;
 
-        const apiKey = process.env.GOOGLE_MAPS_BROWSER_KEY || process.env.GOOGLE_MAPS_KEY;
+        const apiKey = process.env.GOOGLE_MAPS_BROWSER_KEY || process.env.GOOGLE_MAPS_KEY || "AIzaSyD65jmUhMkYgSBDdArG7mj73fn3B0YCqjQ";
         if (!apiKey) {
           return new Response(JSON.stringify({ error: "GOOGLE_MAPS_KEY not set" }), {
             status: 500,
