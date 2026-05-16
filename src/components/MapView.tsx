@@ -39,7 +39,6 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
 type DistanceFilter = 0 | 1 | 3 | 5; // 0 = todos
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const { t } = useTranslation();
   const R = 6371;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
