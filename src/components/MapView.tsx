@@ -1,8 +1,9 @@
 /// <reference types="google.maps" />
-import { useEffect, useMemo, useRef, useState, memo, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, memo, useCallback, Component } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
-import { Locate, Loader2 } from "lucide-react";
+import { Locate, Loader2, MapPin } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { updateRestaurant } from "@/lib/api.functions";
 import { authFetch } from "@/lib/auth-fetch";
@@ -68,6 +69,8 @@ async function loadGoogleMaps(): Promise<typeof google> {
     await importLibrary("marker");
     return google;
   })();
+  // Clear cache on failure so next mount can retry
+  loaderPromise.catch(() => { loaderPromise = null; });
   return loaderPromise;
 }
 
@@ -429,4 +432,39 @@ function escapeHtml(s: string) {
     .replace(/'/g, "&#39;");
 }
 
-export const MapView = memo(MapViewImpl);
+
+class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 text-center">
+          <MapPin size={24} className="text-destructive" />
+          <p className="text-sm font-medium text-foreground">Erro ao carregar o mapa</p>
+          <p className="text-xs text-muted-foreground">Verifique sua conexão e tente novamente.</p>
+          <button
+            onClick={() => { loaderPromise = null; this.setState({ hasError: false }); }}
+            className="mt-2 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function MapViewWithBoundary(props: MapViewProps) {
+  return (
+    <MapErrorBoundary>
+      <MapViewImpl {...props} />
+    </MapErrorBoundary>
+  );
+}
+
+export const MapView = memo(MapViewWithBoundary);
