@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
             return Response.json({ cuisine: "Outro" });
           }
 
-          const prompt = `Dado o nome do restaurante "${name}"${address ? ` localizado em "${address}"` : ""}, qual é o tipo de culinária mais provável? Responda APENAS com uma palavra ou expressão curta em português. Exemplos: Japonês, Italiano, Brasileiro, Bar, Árabe, Mexicano, Pizzaria, Hamburguer, Frutos do Mar, Churrascaria, Vegano, Contemporâneo, Brunch, Café. Se não souber, responda: Outro`;
+          const prompt = `Dado o nome do restaurante "${name}"${address ? ` localizado em "${address}"` : ""}, classifique-o em UMA das seguintes categorias (responda APENAS com o nome exato da categoria, sem aspas nem pontuação):\n\nJaponês, Italiano, Bar & Boteco, Frutos do Mar, Brasileiro, Europeu, Oriente Médio, Saudável, Café & Padaria, Lanches, Coreano, Mexicano, Asiático, Argentino, Carnes, Sobremesa, Peruano, Delivery.\n\nSe não souber, responda: Outro`;
 
           const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
