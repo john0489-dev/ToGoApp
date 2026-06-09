@@ -28,16 +28,24 @@ interface AddRestaurantDialogProps {
 }
 
 const CUISINE_OPTIONS = [
-  "Árabe", "Argentino", "Bar", "Bar de Vinhos", "Bistrô", "Boteco",
-  "Brasileiro", "Brunch", "Café", "Churrascaria", "Chinês", "Colombiano",
-  "Contemporâneo", "Coreano", "Delivery", "Doceria", "Espanhol",
-  "Frutos do Mar", "Francês", "Grego", "Hamburgueria", "Indiano",
-  "Israelense", "Italiano", "Izakaya", "Japonês", "Lebânes",
-  "Mediterrâneo", "Mexicano", "Nórdico", "Padaria", "Peruano",
-  "Pizzaria", "Português", "Ramen", "Sanduíche", "Sobremesa",
-  "Sorveteria", "Steakhouse", "Sushi", "Tailandês", "Tapas",
-  "Tex-Mex", "Turco", "Variado", "Vegano", "Vegetariano",
-  "Vietnamita", "Outro"
+  "Argentino",
+  "Asiático",
+  "Bar & Boteco",
+  "Brasileiro",
+  "Café & Padaria",
+  "Carnes",
+  "Coreano",
+  "Delivery",
+  "Europeu",
+  "Frutos do Mar",
+  "Italiano",
+  "Japonês",
+  "Lanches",
+  "Mexicano",
+  "Oriente Médio",
+  "Peruano",
+  "Saudável",
+  "Sobremesa",
 ];
 
 async function searchPlaces(query: string): Promise<PlaceResult[]> {
@@ -95,7 +103,7 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [country, setCountry] = useState("");
-  const [cuisine, setCuisine] = useState("Bar");
+  const [cuisine, setCuisine] = useState("Bar & Boteco");
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);

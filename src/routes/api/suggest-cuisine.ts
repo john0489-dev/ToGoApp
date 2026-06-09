@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
             return Response.json({ cuisine: "Outro" });
           }
 
-          const prompt = `Dado o nome do restaurante "${name}"${address ? ` localizado em "${address}"` : ""}, qual é o tipo de culinária mais provável? Responda APENAS com uma palavra ou expressão curta em português. Exemplos: Japonês, Italiano, Brasileiro, Bar, Árabe, Mexicano, Pizzaria, Hamburguer, Frutos do Mar, Churrascaria, Vegano, Contemporâneo, Brunch, Café. Se não souber, responda: Outro`;
+          const prompt = `Dado o nome do restaurante "${name}"${address ? ` localizado em "${address}"` : ""}, classifique-o em UMA das seguintes categorias (responda APENAS com o nome exato da categoria, sem aspas nem pontuação):\n\nJaponês, Italiano, Bar & Boteco, Frutos do Mar, Brasileiro, Europeu, Oriente Médio, Saudável, Café & Padaria, Lanches, Coreano, Mexicano, Asiático, Argentino, Carnes, Sobremesa, Peruano, Delivery.\n\nSe não souber, responda: Outro`;
 
           const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               messages: [
-                { role: "system", content: "Você classifica restaurantes por tipo de culinária. Responda apenas com uma palavra ou expressão curta em português, sem pontuação extra." },
+                { role: "system", content: "Você classifica restaurantes em UMA das 18 categorias oficiais do app: Japonês, Italiano, Bar & Boteco, Frutos do Mar, Brasileiro, Europeu, Oriente Médio, Saudável, Café & Padaria, Lanches, Coreano, Mexicano, Asiático, Argentino, Carnes, Sobremesa, Peruano, Delivery. Responda apenas com o nome exato da categoria, sem pontuação extra." },
                 { role: "user", content: prompt },
               ],
             }),
@@ -70,9 +70,17 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
           let cuisine = (data.choices?.[0]?.message?.content || "").trim();
           // strip quotes / trailing punctuation
           cuisine = cuisine.replace(/^["'`]+|["'`.!?]+$/g, "").trim();
-          if (!cuisine) cuisine = "Outro";
-          // cap length
-          cuisine = cuisine.slice(0, 40);
+          // whitelist against the 18 official categories
+          const ALLOWED = [
+            "Japonês","Italiano","Bar & Boteco","Frutos do Mar","Brasileiro",
+            "Europeu","Oriente Médio","Saudável","Café & Padaria","Lanches",
+            "Coreano","Mexicano","Asiático","Argentino","Carnes","Sobremesa",
+            "Peruano","Delivery",
+          ];
+          const match = ALLOWED.find(
+            (c) => c.toLowerCase() === cuisine.toLowerCase()
+          );
+          cuisine = match || "Outro";
 
           return Response.json({ cuisine });
         } catch (err) {
