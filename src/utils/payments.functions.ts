@@ -36,6 +36,7 @@ async function resolveOrCreateCustomer(
 }
 
 export const createCheckoutSession = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: {
     priceId: string;
     customerEmail?: string;
@@ -46,7 +47,31 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
     if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error('Invalid priceId');
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    // Bind session to the authenticated user — ignore any client-supplied userId.
+    const authedUserId = context.userId;
+    if (data.userId && data.userId !== authedUserId) {
+      throw new Error('userId mismatch');
+    }
+
+    // Validate returnUrl is on an allowed origin to prevent post-checkout phishing.
+    const ALLOWED_ORIGINS = new Set([
+      'https://mytogo.lovable.app',
+      'https://mytogo.app',
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ]);
+    let parsedReturn: URL;
+    try {
+      parsedReturn = new URL(data.returnUrl);
+    } catch {
+      throw new Error('Invalid returnUrl');
+    }
+    const originAllowed =
+      ALLOWED_ORIGINS.has(parsedReturn.origin) ||
+      /^https:\/\/[a-z0-9-]+\.lovable\.app$/i.test(parsedReturn.origin);
+    if (!originAllowed) throw new Error('Invalid returnUrl origin');
+
     const stripe = createStripeClient(data.environment);
 
     const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
@@ -54,24 +79,22 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
     const stripePrice = prices.data[0];
     const isRecurring = stripePrice.type === 'recurring';
 
-    const customerId = (data.customerEmail || data.userId)
-      ? await resolveOrCreateCustomer(stripe, {
-          email: data.customerEmail,
-          userId: data.userId,
-        })
-      : undefined;
+    const customerId = await resolveOrCreateCustomer(stripe, {
+      email: data.customerEmail,
+      userId: authedUserId,
+    });
 
     const session = await stripe.checkout.sessions.create({
       line_items: [{ price: stripePrice.id, quantity: 1 }],
       mode: isRecurring ? 'subscription' : 'payment',
       ui_mode: 'embedded_page',
       return_url: data.returnUrl,
-      ...(customerId && { customer: customerId }),
-      ...(data.userId && {
-        metadata: { userId: data.userId },
-        ...(isRecurring && { subscription_data: { metadata: { userId: data.userId } } }),
-      }),
+      customer: customerId,
+      metadata: { userId: authedUserId },
+      ...(isRecurring && { subscription_data: { metadata: { userId: authedUserId } } }),
     });
+
+
 
     return session.client_secret;
   });
