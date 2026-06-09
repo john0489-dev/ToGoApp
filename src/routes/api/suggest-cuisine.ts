@@ -70,9 +70,17 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
           let cuisine = (data.choices?.[0]?.message?.content || "").trim();
           // strip quotes / trailing punctuation
           cuisine = cuisine.replace(/^["'`]+|["'`.!?]+$/g, "").trim();
-          if (!cuisine) cuisine = "Outro";
-          // cap length
-          cuisine = cuisine.slice(0, 40);
+          // whitelist against the 18 official categories
+          const ALLOWED = [
+            "Japonês","Italiano","Bar & Boteco","Frutos do Mar","Brasileiro",
+            "Europeu","Oriente Médio","Saudável","Café & Padaria","Lanches",
+            "Coreano","Mexicano","Asiático","Argentino","Carnes","Sobremesa",
+            "Peruano","Delivery",
+          ];
+          const match = ALLOWED.find(
+            (c) => c.toLowerCase() === cuisine.toLowerCase()
+          );
+          cuisine = match || "Outro";
 
           return Response.json({ cuisine });
         } catch (err) {
