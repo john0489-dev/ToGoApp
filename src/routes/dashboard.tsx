@@ -493,6 +493,17 @@ function Index() {
     return () => document.removeEventListener("mousedown", handler);
   }, [cuisineDropdownOpen]);
 
+  // Close any open dropdowns when the user scrolls the page/list
+  useEffect(() => {
+    if (!cuisineDropdownOpen && !listDropdown) return;
+    const onScroll = () => {
+      setCuisineDropdownOpen(false);
+      setListDropdown(false);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => window.removeEventListener("scroll", onScroll, { capture: true } as any);
+  }, [cuisineDropdownOpen, listDropdown]);
+
   const handleCreateList = async () => {
     if (!newListName.trim() || !session) return;
     if (plan === "free" && limits.lists !== null && usage.lists >= limits.lists) {
