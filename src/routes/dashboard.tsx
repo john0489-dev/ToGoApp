@@ -493,12 +493,17 @@ function Index() {
     return () => document.removeEventListener("mousedown", handler);
   }, [cuisineDropdownOpen]);
 
-  // Close any open dropdowns when the user scrolls the page/list
+  // Close any open dropdowns when the user scrolls OUTSIDE of them
   useEffect(() => {
     if (!cuisineDropdownOpen && !listDropdown) return;
-    const onScroll = () => {
-      setCuisineDropdownOpen(false);
-      setListDropdown(false);
+    const onScroll = (e: Event) => {
+      const target = e.target as Node | null;
+      const insideCuisine =
+        !!target && cuisineDropdownRef.current?.contains(target);
+      if (!insideCuisine) {
+        setCuisineDropdownOpen(false);
+        setListDropdown(false);
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true, capture: true });
     return () => window.removeEventListener("scroll", onScroll, { capture: true } as any);
