@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/suggest-cuisine")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               messages: [
-                { role: "system", content: "Você classifica restaurantes por tipo de culinária. Responda apenas com uma palavra ou expressão curta em português, sem pontuação extra." },
+                { role: "system", content: "Você classifica restaurantes em UMA das 18 categorias oficiais do app: Japonês, Italiano, Bar & Boteco, Frutos do Mar, Brasileiro, Europeu, Oriente Médio, Saudável, Café & Padaria, Lanches, Coreano, Mexicano, Asiático, Argentino, Carnes, Sobremesa, Peruano, Delivery. Responda apenas com o nome exato da categoria, sem pontuação extra." },
                 { role: "user", content: prompt },
               ],
             }),
