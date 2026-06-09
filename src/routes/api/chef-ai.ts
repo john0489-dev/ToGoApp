@@ -29,23 +29,33 @@ function buildSystemPrompt(restaurants: RestaurantContext[] | undefined): string
   if (!restaurants || restaurants.length === 0) {
     return `${SYSTEM_BASE}\n\nLista do usuário: (vazia)`;
   }
+  const cap = (v: string | null | undefined, n: number) =>
+    typeof v === "string" ? v.slice(0, n) : v;
   const summary = restaurants
     .slice(0, 60)
     .map((r) => {
+      const name = cap(r.name, 200);
+      const cuisine = cap(r.cuisine, 100);
+      const location = cap(r.location, 200);
+      const occasion = cap(r.occasion, 100);
+      const tags = Array.isArray(r.tags)
+        ? r.tags.slice(0, 10).map((t) => (typeof t === "string" ? t.slice(0, 50) : "")).filter(Boolean)
+        : [];
       const parts = [
-        r.name,
-        r.cuisine ? `cozinha ${r.cuisine}` : null,
-        r.location ? `bairro ${r.location}` : null,
+        name,
+        cuisine ? `cozinha ${cuisine}` : null,
+        location ? `bairro ${location}` : null,
         r.rating ? `nota ${r.rating}/10` : null,
         r.visited ? "visitado" : "ainda não visitado",
-        r.occasion ? `ocasião ${r.occasion}` : null,
-        r.tags && r.tags.length ? `tags: ${r.tags.join(", ")}` : null,
+        occasion ? `ocasião ${occasion}` : null,
+        tags.length ? `tags: ${tags.join(", ")}` : null,
       ].filter(Boolean);
       return `- ${parts.join("; ")}`;
     })
     .join("\n");
   return `${SYSTEM_BASE}\n\nLista do usuário (${restaurants.length} restaurantes):\n${summary}`;
 }
+
 
 export const Route = createFileRoute("/api/chef-ai")({
   server: {
