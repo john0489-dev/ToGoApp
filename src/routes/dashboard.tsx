@@ -849,7 +849,7 @@ function Index() {
       </header>
 
       {/* Content */}
-      <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
+      <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 min-h-0 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
         {/* List tab — always mounted */}
         <div className={tab === "list" ? "px-4 py-3 space-y-3" : "hidden"}>
             <EarlyAdopterBanner
