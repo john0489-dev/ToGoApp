@@ -566,10 +566,11 @@ function Index() {
   const isMapTab = tab === "location";
 
   return (
-    <div
-      className={isMapTab ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-[100dvh] flex flex-col"}
-      style={{ background: "#faf9f7" }}
-    >
+    <>
+      <div
+        className="h-[100dvh] flex flex-col overflow-hidden"
+        style={{ background: "#faf9f7" }}
+      >
       {/* Header */}
       <header
         className="shrink-0"
@@ -848,7 +849,7 @@ function Index() {
       </header>
 
       {/* Content */}
-      <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
+      <div className={`${isMapTab ? "flex-1 min-h-0 overflow-hidden" : "flex-1 min-h-0 overflow-y-auto"} mx-auto max-w-lg w-full relative`}>
         {/* List tab — always mounted */}
         <div className={tab === "list" ? "px-4 py-3 space-y-3" : "hidden"}>
             <EarlyAdopterBanner
@@ -1042,39 +1043,6 @@ function Index() {
         )}
       </div>
 
-      {/* Bottom tab bar */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]"
-        style={{ background: "#faf9f7", borderTop: "1px solid #ede9e3" }}
-      >
-        <div className="mx-auto max-w-lg flex">
-          <button
-            onClick={() => switchTab("list")}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
-            style={{ color: tab === "list" ? "#c4844a" : "#bbb" }}
-          >
-            <List size={20} />
-            Lista
-          </button>
-          <button
-            onClick={() => switchTab("location")}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
-            style={{ color: tab === "location" ? "#c4844a" : "#bbb" }}
-          >
-            <MapPin size={20} />
-            Mapa
-          </button>
-          <button
-            onClick={() => switchTab("nearme")}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
-            style={{ color: tab === "nearme" ? "#c4844a" : "#bbb" }}
-          >
-            <Navigation size={20} />
-            Perto
-          </button>
-        </div>
-      </nav>
-
       {session && (
         <AddRestaurantDialog
           open={dialogOpen}
@@ -1143,5 +1111,39 @@ function Index() {
         onGoToList={dismissInstalled}
       />
     </div>
-  );
+
+    {/* Bottom tab bar */}
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 pb-[env(safe-area-inset-bottom)]"
+      style={{ background: "#faf9f7", borderTop: "1px solid #ede9e3" }}
+    >
+      <div className="mx-auto max-w-lg flex">
+        <button
+          onClick={() => switchTab("list")}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
+          style={{ color: tab === "list" ? "#c4844a" : "#bbb" }}
+        >
+          <List size={20} />
+          Lista
+        </button>
+        <button
+          onClick={() => switchTab("location")}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
+          style={{ color: tab === "location" ? "#c4844a" : "#bbb" }}
+        >
+          <MapPin size={20} />
+          Mapa
+        </button>
+        <button
+          onClick={() => switchTab("nearme")}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors"
+          style={{ color: tab === "nearme" ? "#c4844a" : "#bbb" }}
+        >
+          <Navigation size={20} />
+          Perto
+        </button>
+      </div>
+    </nav>
+  </>
+);
 }
