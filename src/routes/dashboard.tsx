@@ -566,10 +566,11 @@ function Index() {
   const isMapTab = tab === "location";
 
   return (
-    <div
-      className={isMapTab ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-[100dvh] flex flex-col"}
-      style={{ background: "#faf9f7" }}
-    >
+    <>
+      <div
+        className="h-[100dvh] flex flex-col overflow-hidden"
+        style={{ background: "#faf9f7" }}
+      >
       {/* Header */}
       <header
         className="shrink-0"
