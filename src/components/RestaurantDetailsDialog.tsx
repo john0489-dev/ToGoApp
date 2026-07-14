@@ -36,7 +36,14 @@ interface Props {
   onPhotosChange?: (id: string, photos: string[]) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
   onSaveTags?: (id: string, tags: string[]) => void;
+  onSaveCuisine?: (id: string, cuisine: string) => void;
 }
+
+const CUISINE_OPTIONS = [
+  "Argentino","Asiático","Bar & Boteco","Brasileiro","Café & Padaria","Carnes",
+  "Coreano","Delivery","Europeu","Frutos do Mar","Italiano","Japonês","Lanches",
+  "Mexicano","Oriente Médio","Peruano","Saudável","Sobremesa","Outro",
+];
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
 
@@ -49,6 +56,7 @@ export function RestaurantDetailsDialog({
   onRate,
   onSaveDishFavorite,
   onSaveTags,
+  onSaveCuisine,
 }: Props) {
   const { t } = useTranslation();
   const [addedByEmail, setAddedByEmail] = useState<string | null>(null);
@@ -166,12 +174,35 @@ export function RestaurantDetailsDialog({
               />
               {restaurant.visited ? t("filter_visited") : t("filter_to_visit")}
             </span>
-            <span
-              className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
-              style={{ background: "#fff", border: "1px solid #ede9e3", color: "#1a1a18" }}
-            >
-              {restaurant.cuisine}
-            </span>
+            {onSaveCuisine ? (
+              <label
+                className="relative inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer hover:bg-[#faf9f7] transition-colors"
+                style={{ background: "#fff", border: "1px solid #ede9e3", color: "#1a1a18" }}
+              >
+                {restaurant.cuisine}
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className="ml-1 opacity-60"><path d="M5 8l5 5 5-5H5z" /></svg>
+                <select
+                  value={CUISINE_OPTIONS.includes(restaurant.cuisine) ? restaurant.cuisine : "Outro"}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (next && next !== restaurant.cuisine) onSaveCuisine(restaurant.id, next);
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  aria-label={t("cuisine")}
+                >
+                  {CUISINE_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <span
+                className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                style={{ background: "#fff", border: "1px solid #ede9e3", color: "#1a1a18" }}
+              >
+                {restaurant.cuisine}
+              </span>
+            )}
           </div>
         </div>
 
