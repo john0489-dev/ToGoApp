@@ -10,6 +10,8 @@ interface RestaurantCardProps {
   onDelete: (id: string) => void;
   onRate: (id: string, rating: number) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
+  onSaveTags?: (id: string, tags: string[]) => void;
+  onSaveCuisine?: (id: string, cuisine: string) => void;
   isOpen?: boolean | null;
 }
 
