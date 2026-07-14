@@ -36,7 +36,14 @@ interface Props {
   onPhotosChange?: (id: string, photos: string[]) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
   onSaveTags?: (id: string, tags: string[]) => void;
+  onSaveCuisine?: (id: string, cuisine: string) => void;
 }
+
+const CUISINE_OPTIONS = [
+  "Argentino","Asiático","Bar & Boteco","Brasileiro","Café & Padaria","Carnes",
+  "Coreano","Delivery","Europeu","Frutos do Mar","Italiano","Japonês","Lanches",
+  "Mexicano","Oriente Médio","Peruano","Saudável","Sobremesa","Outro",
+];
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
 
