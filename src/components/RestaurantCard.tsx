@@ -21,6 +21,8 @@ function RestaurantCardImpl({
   onDelete,
   onRate,
   onSaveDishFavorite,
+  onSaveTags,
+  onSaveCuisine,
   isOpen,
 }: RestaurantCardProps) {
   const { t } = useTranslation();
