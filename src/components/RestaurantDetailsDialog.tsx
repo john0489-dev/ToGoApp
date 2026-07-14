@@ -56,6 +56,7 @@ export function RestaurantDetailsDialog({
   onRate,
   onSaveDishFavorite,
   onSaveTags,
+  onSaveCuisine,
 }: Props) {
   const { t } = useTranslation();
   const [addedByEmail, setAddedByEmail] = useState<string | null>(null);
