@@ -152,6 +152,8 @@ function RestaurantCardImpl({
         onDelete={onDelete}
         onRate={onRate}
         onSaveDishFavorite={onSaveDishFavorite}
+        onSaveTags={onSaveTags}
+        onSaveCuisine={onSaveCuisine}
       />
     </>
   );
