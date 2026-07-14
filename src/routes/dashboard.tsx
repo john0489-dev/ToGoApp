@@ -1107,6 +1107,7 @@ function Index() {
           onRate={handleRate}
           onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
           onSaveTags={(id, tags) => updateRestaurantAction(id, { tags })}
+          onSaveCuisine={(id, cuisine) => updateRestaurantAction(id, { cuisine })}
         />
       )}
       <InstallGuideDialog open={installGuideOpen} onOpenChange={setInstallGuideOpen} />
