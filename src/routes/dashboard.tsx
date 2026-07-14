@@ -193,10 +193,15 @@ function Index() {
 
   const switchTab = useCallback((next: Tab) => {
     setTab(next);
+    setDialogOpen(false);
+    setInviteOpen(false);
+    setExportOpen(false);
+    setAdvancedSheetOpen(false);
     if (next === "location" || next === "nearme") {
       setMountedTabs((prev) => (prev[next] ? prev : { ...prev, [next]: true }));
     }
   }, []);
+
 
   // Open restaurant details (used by map InfoWindow "Ver detalhes")
   const [detailsRestaurantId, setDetailsRestaurantId] = useState<string | null>(null);
