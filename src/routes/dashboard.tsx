@@ -1013,6 +1013,8 @@ function Index() {
                       onDelete={handleDelete}
                       onRate={handleRate}
                       onSaveDishFavorite={(id, dish_favorite) => updateRestaurantAction(id, { dish_favorite })}
+                      onSaveTags={(id, tags) => updateRestaurantAction(id, { tags })}
+                      onSaveCuisine={(id, cuisine) => updateRestaurantAction(id, { cuisine })}
                       isOpen={isOpenNow(r.opening_hours ?? null)}
                     />
                   ))}

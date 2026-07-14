@@ -10,6 +10,8 @@ interface RestaurantCardProps {
   onDelete: (id: string) => void;
   onRate: (id: string, rating: number) => void;
   onSaveDishFavorite?: (id: string, dish_favorite: string) => void;
+  onSaveTags?: (id: string, tags: string[]) => void;
+  onSaveCuisine?: (id: string, cuisine: string) => void;
   isOpen?: boolean | null;
 }
 
@@ -19,6 +21,8 @@ function RestaurantCardImpl({
   onDelete,
   onRate,
   onSaveDishFavorite,
+  onSaveTags,
+  onSaveCuisine,
   isOpen,
 }: RestaurantCardProps) {
   const { t } = useTranslation();
@@ -148,6 +152,8 @@ function RestaurantCardImpl({
         onDelete={onDelete}
         onRate={onRate}
         onSaveDishFavorite={onSaveDishFavorite}
+        onSaveTags={onSaveTags}
+        onSaveCuisine={onSaveCuisine}
       />
     </>
   );
