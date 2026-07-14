@@ -313,9 +313,12 @@ export function AddRestaurantDialog({ open, onClose, onAdd }: AddRestaurantDialo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       <div className="fixed inset-0 bg-foreground/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-card p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div
+        className="relative z-10 w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-card p-6 shadow-xl overflow-y-auto"
+        style={{ maxHeight: "calc(100dvh - 24px)", paddingBottom: "calc(24px + env(safe-area-inset-bottom) + 96px)" }}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-card-foreground">{t("add_restaurant")}</h2>
           <button onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground">
