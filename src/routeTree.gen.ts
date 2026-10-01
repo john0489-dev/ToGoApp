@@ -9,64 +9,29 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as ProRouteImport } from './routes/pro'
-import { Route as RefundRouteImport } from './routes/refund'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
-import { Route as ApiSuggestCuisineRouteImport } from './routes/api/suggest-cuisine'
-import { Route as InviteCodeRouteImport } from './routes/invite.$code'
-import { Route as PaymentCanceledRouteImport } from './routes/payment.canceled'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RefundRouteImport } from './routes/refund'
+import { Route as ProRouteImport } from './routes/pro'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
-import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autocomplete'
-import { Route as ApiMapsConfigRouteImport } from './routes/api/maps.config'
+import { Route as PaymentCanceledRouteImport } from './routes/payment.canceled'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as ApiSuggestCuisineRouteImport } from './routes/api/suggest-cuisine'
+import { Route as ApiChefAiRouteImport } from './routes/api/chef-ai'
 import { Route as ApiMapsGeocodeRouteImport } from './routes/api/maps.geocode'
+import { Route as ApiMapsConfigRouteImport } from './routes/api/maps.config'
+import { Route as ApiMapsAutocompleteRouteImport } from './routes/api/maps.autocomplete'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProRoute = ProRouteImport.update({
-  id: '/pro',
-  path: '/pro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RefundRoute = RefundRouteImport.update({
-  id: '/refund',
-  path: '/refund',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -74,29 +39,44 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChefAiRoute = ApiChefAiRouteImport.update({
-  id: '/api/chef-ai',
-  path: '/api/chef-ai',
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSuggestCuisineRoute = ApiSuggestCuisineRouteImport.update({
-  id: '/api/suggest-cuisine',
-  path: '/api/suggest-cuisine',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InviteCodeRoute = InviteCodeRouteImport.update({
-  id: '/invite/$code',
-  path: '/invite/$code',
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PaymentCanceledRoute = PaymentCanceledRouteImport.update({
-  id: '/payment/canceled',
-  path: '/payment/canceled',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
@@ -104,9 +84,29 @@ const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
   path: '/payment/success',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMapsAutocompleteRoute = ApiMapsAutocompleteRouteImport.update({
-  id: '/api/maps/autocomplete',
-  path: '/api/maps/autocomplete',
+const PaymentCanceledRoute = PaymentCanceledRouteImport.update({
+  id: '/payment/canceled',
+  path: '/payment/canceled',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSuggestCuisineRoute = ApiSuggestCuisineRouteImport.update({
+  id: '/api/suggest-cuisine',
+  path: '/api/suggest-cuisine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChefAiRoute = ApiChefAiRouteImport.update({
+  id: '/api/chef-ai',
+  path: '/api/chef-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMapsGeocodeRoute = ApiMapsGeocodeRouteImport.update({
+  id: '/api/maps/geocode',
+  path: '/api/maps/geocode',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMapsConfigRoute = ApiMapsConfigRouteImport.update({
@@ -114,9 +114,9 @@ const ApiMapsConfigRoute = ApiMapsConfigRouteImport.update({
   path: '/api/maps/config',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMapsGeocodeRoute = ApiMapsGeocodeRouteImport.update({
-  id: '/api/maps/geocode',
-  path: '/api/maps/geocode',
+const ApiMapsAutocompleteRoute = ApiMapsAutocompleteRouteImport.update({
+  id: '/api/maps/autocomplete',
+  path: '/api/maps/autocomplete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPaymentsWebhookRoute =
@@ -280,60 +280,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pro': {
-      id: '/pro'
-      path: '/pro'
-      fullPath: '/pro'
-      preLoaderRoute: typeof ProRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refund': {
-      id: '/refund'
-      path: '/refund'
-      fullPath: '/refund'
-      preLoaderRoute: typeof RefundRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -343,39 +294,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chef-ai': {
-      id: '/api/chef-ai'
-      path: '/api/chef-ai'
-      fullPath: '/api/chef-ai'
-      preLoaderRoute: typeof ApiChefAiRouteImport
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/suggest-cuisine': {
-      id: '/api/suggest-cuisine'
-      path: '/api/suggest-cuisine'
-      fullPath: '/api/suggest-cuisine'
-      preLoaderRoute: typeof ApiSuggestCuisineRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invite/$code': {
-      id: '/invite/$code'
-      path: '/invite/$code'
-      fullPath: '/invite/$code'
-      preLoaderRoute: typeof InviteCodeRouteImport
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/payment/canceled': {
-      id: '/payment/canceled'
-      path: '/payment/canceled'
-      fullPath: '/payment/canceled'
-      preLoaderRoute: typeof PaymentCanceledRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payment/success': {
@@ -385,11 +357,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/maps/autocomplete': {
-      id: '/api/maps/autocomplete'
-      path: '/api/maps/autocomplete'
-      fullPath: '/api/maps/autocomplete'
-      preLoaderRoute: typeof ApiMapsAutocompleteRouteImport
+    '/payment/canceled': {
+      id: '/payment/canceled'
+      path: '/payment/canceled'
+      fullPath: '/payment/canceled'
+      preLoaderRoute: typeof PaymentCanceledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/suggest-cuisine': {
+      id: '/api/suggest-cuisine'
+      path: '/api/suggest-cuisine'
+      fullPath: '/api/suggest-cuisine'
+      preLoaderRoute: typeof ApiSuggestCuisineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chef-ai': {
+      id: '/api/chef-ai'
+      path: '/api/chef-ai'
+      fullPath: '/api/chef-ai'
+      preLoaderRoute: typeof ApiChefAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/maps/geocode': {
+      id: '/api/maps/geocode'
+      path: '/api/maps/geocode'
+      fullPath: '/api/maps/geocode'
+      preLoaderRoute: typeof ApiMapsGeocodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/maps/config': {
@@ -399,11 +399,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMapsConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/maps/geocode': {
-      id: '/api/maps/geocode'
-      path: '/api/maps/geocode'
-      fullPath: '/api/maps/geocode'
-      preLoaderRoute: typeof ApiMapsGeocodeRouteImport
+    '/api/maps/autocomplete': {
+      id: '/api/maps/autocomplete'
+      path: '/api/maps/autocomplete'
+      fullPath: '/api/maps/autocomplete'
+      preLoaderRoute: typeof ApiMapsAutocompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/payments/webhook': {
